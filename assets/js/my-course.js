@@ -38,45 +38,33 @@ function getDriveEmbedUrl(url) {
 
     if (parsed.hostname === "drive.google.com") {
       const match = parsed.pathname.match(/\/file\/d\/([^/]+)/);
-
       if (match) {
         return `https://drive.google.com/file/d/${match[1]}/preview`;
       }
 
       const id = parsed.searchParams.get("id");
-
       if (id) {
         return `https://drive.google.com/file/d/${id}/preview`;
       }
     }
 
     if (parsed.hostname === "docs.google.com") return url;
-
     return null;
   } catch {
     return null;
   }
 }
 
-// UPDATE COURSE PROGRESS DISPLAY
 function updateProgressDisplay() {
   const total = modules.length;
   const completed = completedModules.size;
-  const percent = total
-    ? Math.round((completed / total) * 100)
-    : 0;
+  const percent = total ? Math.round((completed / total) * 100) : 0;
 
-  document.getElementById("progressPercent").textContent =
-    `${percent}%`;
-
+  document.getElementById("progressPercent").textContent = `${percent}%`;
   document.getElementById("progressCount").textContent =
     `${completed} of ${total} modules completed`;
-
-  document.getElementById("progressBar").style.width =
-    `${percent}%`;
-
-  document.getElementById("progressTrack")
-    .setAttribute("aria-valuenow", String(percent));
+  document.getElementById("progressBar").style.width = `${percent}%`;
+  document.getElementById("progressTrack").setAttribute("aria-valuenow", String(percent));
 
   modules.forEach(module => {
     const card = document.getElementById(`module-${module.id}`);
@@ -84,48 +72,29 @@ function updateProgressDisplay() {
 
     if (badge) {
       const isComplete = completedModules.has(module.id);
-
-      badge.textContent = isComplete
-        ? "Completed"
-        : "In progress";
-
+      badge.textContent = isComplete ? "Completed" : "In progress";
       badge.classList.toggle("is-complete", isComplete);
     }
   });
 
-  // CONTINUE LEARNING
-  const nextModule = modules.find(
-    module => !completedModules.has(module.id)
-  );
-
-  const continueButton =
-    document.getElementById("continueLearning");
+  const nextModule = modules.find(module => !completedModules.has(module.id));
+  const continueButton = document.getElementById("continueLearning");
 
   if (nextModule) {
     continueButton.hidden = false;
-
-    continueButton.textContent =
-      `Continue learning: ${nextModule.title || "Next module"}`;
-
+    continueButton.textContent = `Continue learning: ${nextModule.title || "Next module"}`;
     continueButton.onclick = () => {
-      document.getElementById(`module-${nextModule.id}`)
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
+      document.getElementById(`module-${nextModule.id}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     };
   } else {
     continueButton.hidden = true;
   }
 }
 
-// SAVE MODULE COMPLETION
-async function saveModuleProgress(
-  module,
-  isCompleted,
-  checkbox,
-  statusText
-) {
+async function saveModuleProgress(module, isCompleted, checkbox, statusText) {
   checkbox.disabled = true;
   statusText.textContent = "Saving…";
 
@@ -154,20 +123,14 @@ async function saveModuleProgress(
 
   } catch (error) {
     console.error("Could not save module progress:", error);
-
     checkbox.checked = !isCompleted;
     statusText.textContent = "Could not save. Please try again.";
-
-    alert(
-      "Your progress could not be saved. Please check your connection and try again."
-    );
-
+    alert("Your progress could not be saved. Please check your connection and try again.");
   } finally {
     checkbox.disabled = false;
   }
 }
 
-// CREATE MODULE CARD
 function createModuleCard(module) {
   const card = document.createElement("article");
   card.className = "module-card";
@@ -181,14 +144,9 @@ function createModuleCard(module) {
 
   const badge = document.createElement("span");
   badge.className = "module-status";
+  badge.textContent = completedModules.has(module.id) ? "Completed" : "In progress";
 
-  badge.textContent = completedModules.has(module.id)
-    ? "Completed"
-    : "In progress";
-
-  if (completedModules.has(module.id)) {
-    badge.classList.add("is-complete");
-  }
+  if (completedModules.has(module.id)) badge.classList.add("is-complete");
 
   top.append(heading, badge);
   card.appendChild(top);
@@ -200,29 +158,62 @@ function createModuleCard(module) {
     card.appendChild(description);
   }
 
-  // GOOGLE DRIVE VIDEO
-  const embedUrl = getDriveEmbedUrl(module.videoUrl || "");
+  // Video is created only when the participant chooses to watch it.
+  const videoToggle = document.createElement("button");
+  videoToggle.type = "button";
+  videoToggle.className = "button button-dark watch-video-button";
+  videoToggle.textContent = "▶ Watch video";
+  videoToggle.setAttribute("aria-expanded", "false");
 
-  if (embedUrl) {
-    const frame = document.createElement("iframe");
+  const videoPanel = document.createElement("div");
+  videoPanel.className = "module-video-panel";
+  videoPanel.hidden = true;
 
-    frame.src = embedUrl;
-    frame.title = module.title || "Course video";
-    frame.loading = "lazy";
-    frame.allow =
-      "autoplay; encrypted-media; picture-in-picture";
-    frame.allowFullscreen = true;
-    frame.referrerPolicy = "strict-origin-when-cross-origin";
+  videoToggle.addEventListener("click", () => {
+    const willOpen = videoPanel.hidden;
 
-    card.appendChild(frame);
+    // Keep only one module video expanded at a time.
+    document.querySelectorAll(".module-video-panel").forEach(panel => {
+      panel.hidden = true;
 
-  } else {
-    const message = document.createElement("p");
-    message.textContent = "Video is currently unavailable.";
-    card.appendChild(message);
-  }
+      const button = panel.previousElementSibling;
+      if (button?.classList.contains("watch-video-button")) {
+        button.textContent = "▶ Watch video";
+        button.setAttribute("aria-expanded", "false");
+      }
 
-  // COMPLETION CHECKBOX
+      // Stop playback when another module is opened.
+      const existingFrame = panel.querySelector("iframe");
+      if (existingFrame) existingFrame.remove();
+    });
+
+    if (willOpen) {
+      const embedUrl = getDriveEmbedUrl(module.videoUrl || "");
+
+      if (embedUrl) {
+        const frame = document.createElement("iframe");
+        frame.src = embedUrl;
+        frame.title = module.title || "Course video";
+        frame.loading = "lazy";
+        frame.allow = "autoplay; encrypted-media; picture-in-picture";
+        frame.allowFullscreen = true;
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        videoPanel.appendChild(frame);
+      } else {
+        const message = document.createElement("p");
+        message.textContent =
+          "Video is currently unavailable. Please contact the administrator.";
+        videoPanel.appendChild(message);
+      }
+
+      videoPanel.hidden = false;
+      videoToggle.textContent = "Hide video ↑";
+      videoToggle.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  card.append(videoToggle, videoPanel);
+
   const completion = document.createElement("label");
   completion.className = "module-completion";
 
@@ -231,18 +222,10 @@ function createModuleCard(module) {
   checkbox.checked = completedModules.has(module.id);
 
   const statusText = document.createElement("span");
-
-  statusText.textContent = checkbox.checked
-    ? "Completed"
-    : "Mark as completed";
+  statusText.textContent = checkbox.checked ? "Completed" : "Mark as completed";
 
   checkbox.addEventListener("change", () => {
-    saveModuleProgress(
-      module,
-      checkbox.checked,
-      checkbox,
-      statusText
-    );
+    saveModuleProgress(module, checkbox.checked, checkbox, statusText);
   });
 
   completion.append(checkbox, statusText);
@@ -251,7 +234,6 @@ function createModuleCard(module) {
   return card;
 }
 
-// LOAD SAVED PROGRESS
 async function loadProgress() {
   completedModules = new Set();
 
@@ -271,14 +253,11 @@ async function loadProgress() {
     }
   });
 }
-// SIGN OUT
-document.getElementById("signOut")
-  ?.addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.replace("login.html");
-  });
+document.getElementById("signOut")?.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.replace("login.html");
+});
 
-// AUTHENTICATION AND COURSE ACCESS
 onAuthStateChanged(auth, async user => {
   if (!user) {
     window.location.replace("login.html");
@@ -288,23 +267,16 @@ onAuthStateChanged(auth, async user => {
   currentUser = user;
 
   try {
-    // VERIFY ADMIN
-    const adminSnap = await getDoc(
-      doc(db, "admins", user.uid)
-    );
+    // Verify administrator
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
 
-    if (
-      adminSnap.exists() &&
-      adminSnap.data().role === "admin"
-    ) {
+    if (adminSnap.exists() && adminSnap.data().role === "admin") {
       window.location.replace("dashboard.html");
       return;
     }
 
-    // VERIFY PARTICIPANT
-    const participantSnap = await getDoc(
-      doc(db, "participants", user.uid)
-    );
+    // Verify participant
+    const participantSnap = await getDoc(doc(db, "participants", user.uid));
 
     if (!participantSnap.exists()) {
       showAccessDenied();
@@ -313,22 +285,16 @@ onAuthStateChanged(auth, async user => {
 
     const participant = participantSnap.data();
 
-    // VERIFY EMAIL
-    const registeredEmail =
-      (participant.email || "").trim().toLowerCase();
+    // Verify registered email
+    const registeredEmail = (participant.email || "").trim().toLowerCase();
+    const signedInEmail = (user.email || "").trim().toLowerCase();
 
-    const signedInEmail =
-      (user.email || "").trim().toLowerCase();
-
-    if (
-      !registeredEmail ||
-      registeredEmail !== signedInEmail
-    ) {
+    if (!registeredEmail || registeredEmail !== signedInEmail) {
       showAccessDenied();
       return;
     }
 
-    // VERIFY COURSE ASSIGNMENT
+    // Verify assigned course
     const courseId = participant.courseId;
 
     if (!courseId) {
@@ -336,9 +302,6 @@ onAuthStateChanged(auth, async user => {
       return;
     }
 
-    currentCourseId = courseId;
-
-    // VERIFY ENROLLMENT
     const enrollmentSnap = await getDoc(
       doc(db, "enrollments", `${user.uid}_${courseId}`)
     );
@@ -346,29 +309,23 @@ onAuthStateChanged(auth, async user => {
     if (
       !enrollmentSnap.exists() ||
       enrollmentSnap.data().status !== "approved" ||
-      (enrollmentSnap.data().email || "")
-        .trim().toLowerCase() !== signedInEmail
+      (enrollmentSnap.data().email || "").trim().toLowerCase() !== signedInEmail
     ) {
       showAccessDenied();
       return;
     }
 
-    // VERIFY COURSE PUBLICATION
-    const courseSnap = await getDoc(
-      doc(db, "courses", courseId)
-    );
+    // Verify course publication
+    const courseSnap = await getDoc(doc(db, "courses", courseId));
 
-    if (
-      !courseSnap.exists() ||
-      courseSnap.data().published !== true
-    ) {
+    if (!courseSnap.exists() || courseSnap.data().published !== true) {
       showAccessDenied();
       return;
     }
 
     const course = courseSnap.data();
+    currentCourseId = courseId;
 
-    // PARTICIPANT DETAILS
     document.getElementById("participantIdentity").textContent =
       user.displayName || user.email || "Participant";
 
@@ -378,7 +335,7 @@ onAuthStateChanged(auth, async user => {
     document.getElementById("courseDescription").textContent =
       course.description || "";
 
-    // LOAD PUBLISHED MODULES
+    // Load published modules
     const modulesQuery = query(
       collection(db, "modules"),
       where("courseId", "==", courseId),
@@ -392,11 +349,9 @@ onAuthStateChanged(auth, async user => {
       ...item.data()
     }));
 
-    modules.sort(
-      (a, b) => (a.order || 0) - (b.order || 0)
-    );
+    modules.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    // LOAD COMPLETED MODULES
+    // Load saved progress
     await loadProgress();
 
     moduleList.replaceChildren();
@@ -404,18 +359,14 @@ onAuthStateChanged(auth, async user => {
     if (!modules.length) {
       const empty = document.createElement("p");
       empty.className = "empty-modules";
-      empty.textContent =
-        "Course modules will be available soon.";
-
+      empty.textContent = "Course modules will be available soon.";
       moduleList.appendChild(empty);
-
     } else {
       modules.forEach(module => {
         moduleList.appendChild(createModuleCard(module));
       });
     }
 
-    // UPDATE PROGRESS
     updateProgressDisplay();
 
     accessMessage.hidden = true;

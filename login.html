@@ -1,36 +1,59 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Participant Login | TBARC Academy</title>
+  <title>Login | TBARC Academy</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body class="login-page">
+
   <header class="site-header">
     <div class="container nav-wrap">
       <a class="brand" href="index.html">
         <span class="brand-mark">T</span>
-        <span><strong>TBARC ACADEMY</strong><small>Learning &amp; Research</small></span>
+        <span>
+          <strong>TBARC ACADEMY</strong>
+          <small>Learning &amp; Research</small>
+        </span>
       </a>
+
       <a class="back-home" href="index.html">← Home</a>
     </div>
   </header>
 
   <main class="login-main">
     <div class="login-card">
+
       <span class="brand-mark large">T</span>
-      <span class="section-label">PARTICIPANT AREA</span>
-      <h1>Welcome back</h1>
-      <p>Sign in using the Google account you registered with for the course.</p>
+
+      <span class="section-label" id="loginLabel">
+        SECURE LOGIN
+      </span>
+
+      <h1 id="loginTitle">Welcome back</h1>
+
+      <p id="loginDescription">
+        Sign in using your registered Google account.
+      </p>
+
       <button class="button google-button" id="googleSignIn" type="button">
-        <span class="google-g">G</span> Continue with Google
+        <span class="google-g">G</span>
+        Continue with Google
       </button>
+
       <p id="loginMessage" class="login-help" aria-live="polite"></p>
-      <small class="secure-note">Only approved registered participants can access course content.</small>
+
+      <small class="secure-note" id="loginSecureNote">
+        Access is restricted to authorised users.
+      </small>
+
     </div>
   </main>
 
   <script type="module" src="assets/js/login.js"></script>
+
 </body>
 </html>

@@ -20,113 +20,250 @@ import {
 const googleSignIn = document.getElementById("googleSignIn");
 const loginMessage = document.getElementById("loginMessage");
 
+const loginTitle = document.getElementById("loginTitle");
+const loginDescription = document.getElementById("loginDescription");
+const loginLabel = document.getElementById("loginLabel");
+const loginSecureNote = document.getElementById("loginSecureNote");
+
+// Identify the requested login mode
+const params = new URLSearchParams(window.location.search);
+
+const adminMode = params.get("admin") === "1";
+const selectedCourseId = params.get("course");
+
+// Configure the login page
 function showMessage(message) {
   loginMessage.textContent = message;
 }
 
+if (adminMode && !selectedCourseId) {
+
+  loginLabel.textContent = "ADMINISTRATION";
+  loginTitle.textContent = "Admin Login";
+  loginDescription.textContent =
+    "Sign in using your authorised administrator Google account.";
+
+  loginSecureNote.textContent =
+    "Only authorised TBARC Academy administrators can access the dashboard.";
+
+} else if (!adminMode && selectedCourseId) {
+
+  loginLabel.textContent = "PARTICIPANT AREA";
+  loginTitle.textContent = "Welcome back";
+  loginDescription.textContent =
+    "Sign in using the Google account registered for this course.";
+
+  loginSecureNote.textContent =
+    "Only approved participants enrolled in this course can access its content.";
+
+} else {
+
+  loginLabel.textContent = "LOGIN REQUIRED";
+  loginTitle.textContent = "Invalid login link";
+  loginDescription.textContent =
+    "Please return to the TBARC Academy homepage and select a valid login option.";
+
+  loginSecureNote.textContent = "";
+
+  googleSignIn.disabled = true;
+  showMessage("Please select a course or use the administrator login.");
+}
+
+
+// Google sign-in
 googleSignIn.addEventListener("click", async () => {
+
+  if (!adminMode && !selectedCourseId) {
+    showMessage("Invalid login request. Please return to the homepage.");
+    return;
+  }
+
   googleSignIn.disabled = true;
   showMessage("Signing in with Google…");
 
   try {
+
     await setPersistence(auth, browserLocalPersistence);
 
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    // Administrator verification
+    const signedInEmail = (user.email || "").trim().toLowerCase();
+
+    // Check administrator account
     const adminSnap = await getDoc(
       doc(db, "admins", user.uid)
     );
 
-    if (
+    const isAdmin =
       adminSnap.exists() &&
-      adminSnap.data().role === "admin"
-    ) {
+      adminSnap.data().role === "admin";
+
+
+    // ADMIN LOGIN MODE
+    if (adminMode) {
+
+      if (!isAdmin) {
+        showMessage(
+          "Administrator access denied. This Google account is not authorised."
+        );
+
+        await signOut(auth);
+        return;
+      }
+
+      showMessage("Administrator verified. Opening dashboard…");
+
       window.location.replace("dashboard.html");
       return;
     }
 
-    // Participant verification
+
+    // PARTICIPANT LOGIN MODE
+
+    // Administrators must use the admin login route
+    if (isAdmin) {
+
+      showMessage(
+        "This is an administrator account. Please use the Admin Login option."
+      );
+
+      await signOut(auth);
+      return;
+    }
+
+
+    // Verify that the selected course exists and is published
+    const courseSnap = await getDoc(
+      doc(db, "courses", selectedCourseId)
+    );
+
+    if (!courseSnap.exists() || courseSnap.data().published !== true) {
+
+      showMessage(
+        "This course is currently unavailable. Please return to the courses page."
+      );
+
+      await signOut(auth);
+      return;
+    }
+
+
+    // Verify participant record
     const participantSnap = await getDoc(
       doc(db, "participants", user.uid)
     );
 
     if (!participantSnap.exists()) {
+
       showMessage(
-        "You have no access to the content. Kindly contact the administrator."
+        "You are not registered as a participant. Kindly contact the administrator."
       );
+
       await signOut(auth);
       return;
     }
 
     const participant = participantSnap.data();
 
-    // Registered email verification
+
+    // Verify registered email
     const registeredEmail =
       (participant.email || "").trim().toLowerCase();
-
-    const signedInEmail =
-      (user.email || "").trim().toLowerCase();
 
     if (
       !registeredEmail ||
       registeredEmail !== signedInEmail
     ) {
+
       showMessage(
-        "You have no access to the content. Kindly contact the administrator."
+        "The Google account does not match your registered email address."
       );
+
       await signOut(auth);
       return;
     }
 
-    const courseId = participant.courseId;
 
-    if (!courseId) {
+    // Verify selected course against participant assignment
+    const assignedCourseId = participant.courseId;
+
+    if (!assignedCourseId) {
+
       showMessage(
-        "You have no access to the content. Kindly contact the administrator."
+        "No course has been assigned to your account. Please contact the administrator."
       );
+
       await signOut(auth);
       return;
     }
 
-    // Enrollment verification
+    if (assignedCourseId !== selectedCourseId) {
+
+      showMessage(
+        "You are not enrolled in this course. Please select the course assigned to your account."
+      );
+
+      await signOut(auth);
+      return;
+    }
+
+
+    // Verify approved enrollment
     const enrollmentSnap = await getDoc(
-      doc(db, "enrollments", `${user.uid}_${courseId}`)
+      doc(db, "enrollments", `${user.uid}_${selectedCourseId}`)
     );
 
     if (!enrollmentSnap.exists()) {
+
       showMessage(
-        "You have no access to the content. Kindly contact the administrator."
+        "Your course enrollment could not be verified. Please contact the administrator."
       );
+
       await signOut(auth);
       return;
     }
 
     const enrollment = enrollmentSnap.data();
 
+    const enrollmentEmail =
+      (enrollment.email || "").trim().toLowerCase();
+
     if (
       enrollment.status !== "approved" ||
-      (enrollment.email || "").trim().toLowerCase() !== signedInEmail
+      enrollmentEmail !== signedInEmail
     ) {
+
       showMessage(
-        "You have no access to the content. Kindly contact the administrator."
+        "Your enrollment is not approved. Please contact the administrator."
       );
+
       await signOut(auth);
       return;
     }
 
+
     // Successful participant login
+    showMessage("Access verified. Opening your course…");
+
     window.location.replace("my-course.html");
 
   } catch (error) {
+
     console.error("Login error:", error);
 
-    showMessage(
-      error.message || "Sign-in failed. Please try again."
-    );
+    if (error.code === "auth/popup-closed-by-user") {
+      showMessage("Sign-in was cancelled. Please try again.");
+    } else {
+      showMessage(
+        error.message || "Sign-in failed. Please try again."
+      );
+    }
 
   } finally {
+
     googleSignIn.disabled = false;
+
   }
+
 });

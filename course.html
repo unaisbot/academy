@@ -1,0 +1,126 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123f32">
+
+  <title>Course Details | TBARC Academy</title>
+
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <img src="/assets/images/logo.png" alt="TBARC Academy" class="brand-logo">
+    <span>
+      <strong>TBARC ACADEMY</strong>
+      <small>Learning &amp; Research</small>
+    </span>
+  </a>
+
+  <nav class="main-nav">
+    <a href="index.html">Home</a>
+    <a class="nav-button" href="login.html?admin=1">Admin Login</a>
+  </nav>
+
+  <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+</header>
+
+<main>
+
+  <section class="page-hero">
+    <p class="eyebrow">TBARC ACADEMY · COURSE DETAILS</p>
+    <h1 id="courseTitle">Loading course…</h1>
+    <p id="courseShortDescription"></p>
+  </section>
+
+  <section class="section course-detail-section">
+
+    <div id="courseImageContainer" class="course-detail-image-wrap" hidden>
+      <img id="courseImage" class="course-detail-image" alt="">
+    </div>
+
+    <div class="course-detail-layout">
+
+      <div class="course-detail-main">
+
+        <h2>About this course</h2>
+        <p id="courseDescription"></p>
+
+        <div id="objectivesSection" hidden>
+          <h2>Learning objectives</h2>
+          <ul id="courseObjectives"></ul>
+        </div>
+
+        <div id="syllabusSection" hidden>
+          <h2>Course syllabus</h2>
+          <div id="courseSyllabus"></div>
+        </div>
+
+      </div>
+
+      <aside class="course-detail-sidebar">
+
+        <h2>Course information</h2>
+
+        <div class="course-info-row">
+          <span>Duration</span>
+          <strong id="courseDuration">To be announced</strong>
+        </div>
+
+        <div class="course-info-row">
+          <span>Mode</span>
+          <strong id="courseMode">To be announced</strong>
+        </div>
+
+        <div class="course-info-row">
+          <span>Instructor</span>
+          <strong id="courseInstructor">To be announced</strong>
+        </div>
+
+        <div class="course-info-row">
+          <span>Fee details</span>
+          <strong id="courseFee">To be announced</strong>
+        </div>
+
+        <a id="courseLoginButton"
+           class="button button-dark course-login-button"
+           href="#">
+          Sign in to access this course
+        </a>
+
+        <p class="course-login-note">
+          Access is available only to participants approved
+          for this particular course.
+        </p>
+
+      </aside>
+
+    </div>
+
+    <p id="coursePageMessage" class="status-message"></p>
+
+    <a href="index.html#courses" class="text-link">
+      ← Back to all courses
+    </a>
+
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <a class="footer-brand" href="index.html">TBARC ACADEMY</a>
+  <span>Learning &amp; Research</span>
+  <span>© <span data-year></span> TBARC. All rights reserved.</span>
+</footer>
+
+<script type="module" src="assets/js/course.js"></script>
+<script src="assets/js/site.js" defer></script>
+
+</body>
+</html>

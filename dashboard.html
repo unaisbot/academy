@@ -1,63 +1,215 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Academy Admin | TBARC Academy</title>
-<link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123f32">
+
+  <title>Academy Admin | TBARC Academy</title>
+
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
+
 <header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">T</span><span><strong>TBARC ACADEMY</strong><small>Learning &amp; Research</small></span></a>
-    <button id="signOut" class="button" type="button">Sign out</button>
-  </div>
+  <a class="brand" href="index.html">
+    <img src="/assets/images/logo.png" alt="TBARC Academy" class="brand-logo">
+    <span>
+      <strong>TBARC ACADEMY</strong>
+      <small>Learning &amp; Research</small>
+    </span>
+  </a>
+
+  <button id="signOut" class="button button-dark" type="button">
+    Sign out
+  </button>
 </header>
+
 <main class="admin-main">
 <div class="container">
+
   <div class="admin-heading">
-    <div><span class="section-label">ADMINISTRATION</span><h1>Academy dashboard</h1><p id="adminIdentity">Verifying administrator…</p></div>
+    <div>
+      <span class="section-label">ADMINISTRATION</span>
+      <h1>Academy dashboard</h1>
+      <p id="adminIdentity">Verifying administrator…</p>
+    </div>
     <span class="admin-badge">Administrator</span>
   </div>
+
   <div id="accessMessage" class="admin-note" hidden></div>
+
   <div id="adminTools" class="admin-grid" hidden>
+
+    <!-- COURSE MANAGEMENT -->
     <section class="admin-panel">
       <h2>Course management</h2>
-      <p class="panel-help">Create or publish the single course currently being conducted.</p>
+      <p class="panel-help">
+        Create and manage courses offered through TBARC Academy.
+      </p>
+
       <form id="courseForm" class="admin-form">
-        <label>Course title<input id="courseTitle" required maxlength="120" placeholder="e.g. Certificate Course in Ecological Niche Modelling"></label>
-        <label>Short description<textarea id="courseDescription" maxlength="500" placeholder="Brief course overview"></textarea></label>
+
+        <label>
+          Course title
+          <input id="courseTitle" required maxlength="120"
+            placeholder="Course name">
+        </label>
+
+        <label>
+          Short description
+          <textarea id="courseDescription" maxlength="500"
+            placeholder="Brief course overview"></textarea>
+        </label>
+
         <button class="button" type="submit">Create course</button>
+
         <div id="courseStatus" class="admin-status" aria-live="polite"></div>
       </form>
+
       <div id="courseList" class="admin-list"></div>
     </section>
+
+    <!-- MODULE MANAGEMENT -->
     <section class="admin-panel">
-      <h2>Add a video lesson</h2>
-      <p class="panel-help">Add a Google Drive video link to a course. Drive permission automation is a separate backend step.</p>
-      <form id="lessonForm" class="admin-form">
-        <label>Course<select id="lessonCourse" required><option value="">Create a course first</option></select></label>
-        <label>Lesson title<input id="lessonTitle" required maxlength="120" placeholder="Lesson 1 – Introduction"></label>
-        <label>Google Drive video URL<input id="videoUrl" type="url" required placeholder="https://drive.google.com/file/d/..."></label>
-        <button class="button" type="submit">Add lesson</button>
-        <div id="lessonStatus" class="admin-status" aria-live="polite"></div>
+      <h2>Module management</h2>
+      <p class="panel-help">
+        Add learning modules and Google Drive video links to a course.
+      </p>
+
+      <form id="moduleForm" class="admin-form">
+
+        <label>
+          Course
+          <select id="moduleCourse" required>
+            <option value="">Select a course</option>
+          </select>
+        </label>
+
+        <label>
+          Module title
+          <input id="moduleTitle" required maxlength="120"
+            placeholder="Module 01 – Introduction">
+        </label>
+
+        <label>
+          Short description
+          <textarea id="moduleDescription" maxlength="500"
+            placeholder="Module overview"></textarea>
+        </label>
+
+        <label>
+          Google Drive video URL
+          <input id="moduleVideoUrl" type="url" required
+            placeholder="https://drive.google.com/file/d/...">
+        </label>
+
+        <label>
+          Display order
+          <input id="moduleOrder" type="number" min="1" value="1" required>
+        </label>
+
+        <label>
+          Publication status
+          <select id="modulePublished" required>
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
+          </select>
+        </label>
+
+        <button class="button" type="submit">Add module</button>
+
+        <div id="moduleStatus" class="admin-status" aria-live="polite"></div>
       </form>
     </section>
+
+    <!-- PARTICIPANT APPROVAL -->
     <section class="admin-panel full-panel">
-      <h2>Grant participant access</h2>
-      <p class="panel-help">Use the participant's Firebase Authentication UID after they have signed in once. Access is set to three calendar months from today.</p>
-      <form id="enrollmentForm" class="admin-form" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-        <label>Participant name<input id="participantName" required maxlength="120" placeholder="Full name"></label>
-        <label>Registered email<input id="participantEmail" type="email" required placeholder="participant@example.com"></label>
-        <label>Firebase Authentication UID<input id="participantUid" required placeholder="Paste the user's UID"></label>
-        <label>Course<select id="enrollmentCourse" required><option value="">Create a course first</option></select></label>
-        <div style="grid-column:1/-1"><button class="button" type="submit">Approve and grant 3-month access</button><div id="enrollmentStatus" class="admin-status" aria-live="polite"></div></div>
+      <h2>Participant access management</h2>
+
+      <p class="panel-help">
+        Approve participants using their Firebase Authentication UID.
+        Each participant can be assigned one course. Access remains active
+        until you revoke it.
+      </p>
+
+      <form id="enrollmentForm" class="admin-form"
+        style="grid-template-columns:repeat(2,minmax(0,1fr))">
+
+        <label>
+          Participant name
+          <input id="participantName" required maxlength="120"
+            placeholder="Full name">
+        </label>
+
+        <label>
+          Registered email
+          <input id="participantEmail" type="email" required
+            placeholder="participant@example.com">
+        </label>
+
+        <label>
+          Firebase Authentication UID
+          <input id="participantUid" required
+            placeholder="Paste participant UID">
+        </label>
+
+        <label>
+          Assign course
+          <select id="enrollmentCourse" required>
+            <option value="">Select a course</option>
+          </select>
+        </label>
+
+        <div style="grid-column:1/-1">
+          <button class="button" type="submit">
+            Approve permanent access
+          </button>
+
+          <div id="enrollmentStatus" class="admin-status"
+            aria-live="polite"></div>
+        </div>
       </form>
-      <div class="admin-note">This action records the approved enrollment and expiry date in Firestore. It does not yet grant Google Drive file permissions automatically; that requires the secure Drive integration in the next stage.</div>
+
+      <div class="admin-note">
+        Participants must sign in once with Google before their UID can
+        be registered. Drive file permissions are managed separately.
+      </div>
     </section>
+
+    <!-- APPROVED PARTICIPANTS -->
+    <section class="admin-panel full-panel">
+      <h2>Approved participants</h2>
+
+      <p class="panel-help">
+        View assigned courses and revoke participant access when required.
+      </p>
+
+      <div id="participantList" class="admin-list">
+        Loading participant records…
+      </div>
+
+      <div id="participantListStatus" class="admin-status"
+        aria-live="polite"></div>
+    </section>
+
   </div>
 </div>
 </main>
-<footer><div class="container footer-inner"><span>© <span id="year"></span> TBARC Academy</span><a href="index.html">Return to website</a></div></footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+
+<footer class="site-footer">
+  <span>© <span id="year"></span> TBARC Academy</span>
+  <a href="index.html">Return to website</a>
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
 <script type="module" src="assets/js/dashboard.js"></script>
-</body></html>
+
+</body>
+</html>

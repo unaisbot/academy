@@ -787,3 +787,70 @@ main:has(#courseContent) h1 {
   .site-header { gap: 12px; }
   #signOut { min-width: auto; padding: 9px 13px; }
 }
+
+
+/* COURSE / MODULE DRAFT MANAGEMENT */
+.module-manager {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.module-manager h3 {
+  margin: 0 0 6px;
+  font: 700 18px Manrope,sans-serif;
+}
+.module-manager-select {
+  display: grid;
+  gap: 7px;
+  max-width: 460px;
+  margin: 16px 0;
+  color: #405248;
+  font-size: 13px;
+  font-weight: 700;
+}
+.module-manager-select select,
+.admin-dialog input,
+.admin-dialog select,
+.admin-dialog textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 13px;
+  border: 1px solid #d6e0d8;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: 14px 'DM Sans',sans-serif;
+}
+.admin-dialog {
+  width: min(720px, calc(100% - 28px));
+  max-height: 88vh;
+  overflow: auto;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 25px 80px rgba(0,0,0,.22);
+}
+.admin-dialog::backdrop { background: rgba(10,25,18,.58); }
+.admin-dialog h2 { margin: 0 0 8px; font: 800 25px Manrope,sans-serif; }
+.admin-dialog > div > label { display: grid; gap: 7px; margin: 16px 0; font-size: 13px; font-weight: 700; }
+.admin-dialog textarea { min-height: 90px; resize: vertical; }
+.dialog-close-form { display: flex; justify-content: flex-end; }
+.dialog-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 28px;
+  cursor: pointer;
+}
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.danger-button { background: #8b3028 !important; }
+.danger-button:hover { background: #70251f !important; }
+.preview-module { margin: 18px 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; }
+.preview-module h3 { margin: 0 0 6px; font: 700 17px Manrope,sans-serif; }
+.preview-module iframe,
+.admin-dialog iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 9px; margin-top: 12px; }
+@media (max-width:700px) {
+  .admin-dialog { padding: 22px 16px; }
+}

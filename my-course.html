@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -30,12 +29,13 @@
       color: var(--muted);
     }
 
-    .my-course-card {
+    .my-course-card,
+    .progress-card {
       background: white;
       border: 1px solid var(--line);
       border-radius: 13px;
       padding: 28px;
-      margin-bottom: 35px;
+      margin-bottom: 24px;
     }
 
     .my-course-card h2 {
@@ -43,31 +43,132 @@
       margin: 0 0 10px;
     }
 
-    .module-list {
-      display: grid;
-      gap: 15px;
+    .progress-card {
+      margin-bottom: 35px;
     }
 
-    .module-item {
+    .progress-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 12px;
+    }
+
+    .progress-summary strong {
+      font-size: 24px;
+      color: var(--primary, #123f32);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: #e8eee9;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: #23734f;
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    .progress-caption {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    #continueLearning {
+      margin-top: 16px;
+      cursor: pointer;
+    }
+
+    .module-list {
+      display: grid;
+      gap: 17px;
+    }
+
+    .module-card {
       background: white;
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 20px;
+      padding: 22px;
+      scroll-margin-top: 25px;
     }
 
-    .module-item h3 {
+    .module-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .module-card h3 {
       margin: 0 0 8px;
       font: 700 18px Manrope;
     }
 
-    .module-item p {
+    .module-description {
       color: var(--muted);
       font-size: 14px;
     }
 
-    .module-item button {
-      margin-top: 10px;
+    .module-status {
+      flex-shrink: 0;
+      font-size: 12px;
+      border-radius: 30px;
+      padding: 6px 10px;
+      background: #f0f2f1;
+      color: #59635d;
+    }
+
+    .module-status.is-complete {
+      background: #e7f4eb;
+      color: #216b3c;
+    }
+
+    .module-card iframe {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      border-radius: 9px;
+      margin-top: 15px;
+      background: #111;
+    }
+
+    .module-completion {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 17px;
+      padding-top: 15px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
       cursor: pointer;
+    }
+
+    .module-completion input {
+      width: 18px;
+      height: 18px;
+      accent-color: #23734f;
+      cursor: pointer;
+    }
+
+    .module-completion input:disabled {
+      cursor: wait;
+    }
+
+    .empty-modules {
+      padding: 25px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--muted);
     }
 
     .access-message {
@@ -93,8 +194,18 @@
         padding: 40px 22px;
       }
 
-      .my-course-card {
-        padding: 20px;
+      .my-course-card,
+      .progress-card,
+      .module-card {
+        padding: 19px;
+      }
+
+      .module-card-top {
+        flex-direction: column;
+      }
+
+      .progress-summary strong {
+        font-size: 21px;
       }
     }
   </style>
@@ -102,16 +213,13 @@
 
 <body>
 
-  <!-- HEADER -->
   <header class="site-header">
-
     <a class="brand" href="index.html">
       <img
         src="/assets/images/logo.png"
         alt="TBARC Academy"
         class="brand-logo"
       >
-
       <span>
         <strong>TBARC ACADEMY</strong>
         <small>Learning &amp; Research</small>
@@ -122,35 +230,60 @@
       <span id="participantIdentity" class="participant-identity">
         Checking account...
       </span>
-
       <button id="signOut" class="button button-dark" type="button">
         Sign Out
       </button>
     </div>
-
   </header>
 
   <main class="participant-main">
 
-    <!-- WELCOME -->
     <section class="participant-welcome">
       <p class="eyebrow">PARTICIPANT LEARNING AREA</p>
       <h1>My Learning</h1>
       <p>Welcome to your TBARC Academy course dashboard.</p>
     </section>
 
-    <!-- ACCESS STATUS -->
     <div id="accessMessage" class="access-message">
       Verifying your course access...
     </div>
 
-    <!-- COURSE CONTENT -->
     <section id="courseContent" hidden>
 
       <div class="my-course-card">
         <p class="eyebrow">YOUR ASSIGNED COURSE</p>
         <h2 id="courseTitle">Loading course...</h2>
         <p id="courseDescription"></p>
+      </div>
+
+      <div class="progress-card">
+        <p class="eyebrow">YOUR LEARNING PROGRESS</p>
+        <div class="progress-summary">
+          <span id="progressCount">0 of 0 modules completed</span>
+          <strong id="progressPercent">0%</strong>
+        </div>
+        <div
+          class="progress-track"
+          role="progressbar"
+          aria-label="Course completion"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          id="progressTrack"
+        >
+          <div id="progressBar" class="progress-fill"></div>
+        </div>
+        <p class="progress-caption">
+          Mark each module as completed after finishing it. Your progress is saved automatically.
+        </p>
+        <button
+          id="continueLearning"
+          class="button button-dark"
+          type="button"
+          hidden
+        >
+          Continue learning
+        </button>
       </div>
 
       <div class="section-topline">
@@ -161,23 +294,18 @@
       </div>
 
       <div id="moduleList" class="module-list">
-        <div class="loading-card">
-          Loading modules...
-        </div>
+        <div class="loading-card">Loading modules...</div>
       </div>
 
     </section>
-
   </main>
 
-  <!-- FOOTER -->
   <footer class="site-footer">
     <a class="footer-brand" href="index.html">TBARC ACADEMY</a>
     <span>Learning &amp; Research</span>
     <span>© <span data-year></span> TBARC. All rights reserved.</span>
   </footer>
 
-  <!-- SCRIPTS -->
   <script type="module" src="assets/js/my-course.js"></script>
   <script src="assets/js/site.js" defer></script>
 

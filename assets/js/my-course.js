@@ -29,9 +29,8 @@ function showAccessDenied() {
 function getDriveEmbedUrl(url) {
   try {
     const parsed = new URL(url);
-    const host = parsed.hostname;
 
-    if (host === "drive.google.com") {
+    if (parsed.hostname === "drive.google.com") {
       const match = parsed.pathname.match(/\/file\/d\/([^/]+)/);
 
       if (match) {
@@ -45,7 +44,7 @@ function getDriveEmbedUrl(url) {
       }
     }
 
-    if (host === "docs.google.com") {
+    if (parsed.hostname === "docs.google.com") {
       return url;
     }
 
@@ -61,7 +60,6 @@ function createModuleCard(module) {
 
   const heading = document.createElement("h3");
   heading.textContent = module.title || "Untitled module";
-
   card.appendChild(heading);
 
   if (module.description) {
@@ -80,7 +78,6 @@ function createModuleCard(module) {
     frame.allow = "autoplay; encrypted-media; picture-in-picture";
     frame.allowFullscreen = true;
     frame.referrerPolicy = "strict-origin-when-cross-origin";
-
     card.appendChild(frame);
   } else {
     const message = document.createElement("p");
@@ -103,15 +100,15 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   try {
-    const adminSnap = await getDoc(
-      doc(db, "admins", user.uid)
-    );
+    // Verify administrator
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
 
     if (adminSnap.exists() && adminSnap.data().role === "admin") {
       window.location.replace("dashboard.html");
       return;
     }
 
+    // Verify participant record
     const participantSnap = await getDoc(
       doc(db, "participants", user.uid)
     );
@@ -122,6 +119,16 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     const participant = participantSnap.data();
+
+    // Verify registered email matches Google sign-in email
+    const registeredEmail = (participant.email || "").trim().toLowerCase();
+    const signedInEmail = (user.email || "").trim().toLowerCase();
+
+    if (!registeredEmail || registeredEmail !== signedInEmail) {
+      showAccessDenied();
+      return;
+    }
+
     const courseId = participant.courseId;
 
     if (!courseId) {
@@ -129,21 +136,22 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
+    // Verify enrollment
     const enrollmentSnap = await getDoc(
       doc(db, "enrollments", `${user.uid}_${courseId}`)
     );
 
     if (
       !enrollmentSnap.exists() ||
-      enrollmentSnap.data().status !== "approved"
+      enrollmentSnap.data().status !== "approved" ||
+      (enrollmentSnap.data().email || "").trim().toLowerCase() !== signedInEmail
     ) {
       showAccessDenied();
       return;
     }
 
-    const courseSnap = await getDoc(
-      doc(db, "courses", courseId)
-    );
+    // Verify course
+    const courseSnap = await getDoc(doc(db, "courses", courseId));
 
     if (!courseSnap.exists() || courseSnap.data().published !== true) {
       showAccessDenied();
@@ -161,6 +169,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("courseDescription").textContent =
       course.description || "";
 
+    // Load published modules
     const modulesQuery = query(
       collection(db, "modules"),
       where("courseId", "==", courseId),

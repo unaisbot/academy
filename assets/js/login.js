@@ -34,7 +34,7 @@ googleSignIn.addEventListener("click", async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    // Check administrator access
+    // Administrator verification
     const adminSnap = await getDoc(
       doc(db, "admins", user.uid)
     );
@@ -47,7 +47,7 @@ googleSignIn.addEventListener("click", async () => {
       return;
     }
 
-    // Check participant record
+    // Participant verification
     const participantSnap = await getDoc(
       doc(db, "participants", user.uid)
     );
@@ -61,6 +61,25 @@ googleSignIn.addEventListener("click", async () => {
     }
 
     const participant = participantSnap.data();
+
+    // Registered email verification
+    const registeredEmail =
+      (participant.email || "").trim().toLowerCase();
+
+    const signedInEmail =
+      (user.email || "").trim().toLowerCase();
+
+    if (
+      !registeredEmail ||
+      registeredEmail !== signedInEmail
+    ) {
+      showMessage(
+        "You have no access to the content. Kindly contact the administrator."
+      );
+      await signOut(auth);
+      return;
+    }
+
     const courseId = participant.courseId;
 
     if (!courseId) {
@@ -71,14 +90,24 @@ googleSignIn.addEventListener("click", async () => {
       return;
     }
 
-    // Check enrollment approval
+    // Enrollment verification
     const enrollmentSnap = await getDoc(
       doc(db, "enrollments", `${user.uid}_${courseId}`)
     );
 
+    if (!enrollmentSnap.exists()) {
+      showMessage(
+        "You have no access to the content. Kindly contact the administrator."
+      );
+      await signOut(auth);
+      return;
+    }
+
+    const enrollment = enrollmentSnap.data();
+
     if (
-      !enrollmentSnap.exists() ||
-      enrollmentSnap.data().status !== "approved"
+      enrollment.status !== "approved" ||
+      (enrollment.email || "").trim().toLowerCase() !== signedInEmail
     ) {
       showMessage(
         "You have no access to the content. Kindly contact the administrator."
@@ -87,7 +116,7 @@ googleSignIn.addEventListener("click", async () => {
       return;
     }
 
-    // Approved participant
+    // Successful participant login
     window.location.replace("my-course.html");
 
   } catch (error) {

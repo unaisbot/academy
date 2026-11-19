@@ -514,3 +514,276 @@ a {
     gap: 8px;
   }
 }
+
+
+/* TBARC ACADEMY: LOGIN, ADMIN AND PARTICIPANT PAGES */
+.container {
+  width: min(100% - 48px, 1180px);
+  margin-inline: auto;
+}
+
+.login-main,
+.dashboard-main,
+.admin-main,
+.participant-main,
+main:has(#adminTools),
+main:has(.login-card),
+main:has(#courseContent) {
+  width: min(100% - 48px, 1180px);
+  margin: 0 auto;
+  padding: 58px 0 80px;
+}
+
+.login-main {
+  min-height: calc(100vh - 95px);
+  display: grid;
+  place-items: center;
+}
+
+.login-card {
+  width: min(100%, 480px);
+  padding: 42px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(18,63,50,.08);
+}
+
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--pale);
+  color: var(--g);
+  font: 800 22px Manrope, sans-serif;
+}
+
+.brand-mark.large {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 22px;
+  font-size: 27px;
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 12px;
+  color: #648171;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.login-card h1,
+.dashboard-main h1,
+.admin-main h1,
+.participant-main h1,
+main:has(#adminTools) h1,
+main:has(#courseContent) h1 {
+  margin: 0 0 14px;
+  color: var(--ink);
+  font: 800 clamp(30px,4vw,44px)/1.15 Manrope,sans-serif;
+  letter-spacing: -.04em;
+}
+
+.login-card > p { color: var(--muted); margin: 0 0 24px; }
+.google-button {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #d8e1da;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+.google-button:hover { background: #f8faf7; border-color: #aabdaf; }
+.google-g { margin-right: 10px; color: #4285f4; font-weight: 800; font-size: 18px; }
+.login-help { min-height: 22px; margin: 14px 0 8px !important; color: #a04436 !important; font-size: 13px; }
+.secure-note { display: block; margin-top: 20px; color: var(--muted); font-size: 12px; }
+.back-home { color: var(--g); font-weight: 600; }
+
+#accessMessage {
+  margin: 20px 0;
+  padding: 15px 18px;
+  border: 1px solid #f0d4a8;
+  border-radius: 10px;
+  background: #fff8eb;
+  color: #80531b;
+}
+
+#adminTools {
+  display: grid;
+  gap: 24px;
+  margin-top: 30px;
+}
+
+#adminTools > section,
+.admin-panel,
+.dashboard-card,
+.panel,
+.course-management,
+.module-management,
+.participant-management {
+  min-width: 0;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(18,63,50,.035);
+}
+
+#adminTools h2,
+.admin-panel h2,
+.dashboard-card h2,
+.panel h2 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font: 700 22px/1.3 Manrope,sans-serif;
+}
+
+#adminTools p,
+.admin-panel p,
+.dashboard-card p,
+.panel-help { color: var(--muted); }
+
+#adminTools form {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 16px;
+  align-items: end;
+  margin: 20px 0;
+}
+
+#adminTools form label {
+  display: grid;
+  gap: 7px;
+  color: #405248;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#adminTools input,
+#adminTools select,
+#adminTools textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 13px;
+  border: 1px solid #d6e0d8;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: 14px 'DM Sans',sans-serif;
+  outline: none;
+}
+
+#adminTools textarea { min-height: 90px; resize: vertical; }
+#adminTools input:focus,
+#adminTools select:focus,
+#adminTools textarea:focus {
+  border-color: #6b9b7d;
+  box-shadow: 0 0 0 3px rgba(107,155,125,.14);
+}
+
+#adminTools button,
+#signOut {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 18px;
+  background: var(--g);
+  color: #fff;
+  font: 700 14px 'DM Sans',sans-serif;
+  cursor: pointer;
+}
+#adminTools button:hover, #signOut:hover { background: #1c5845; }
+#adminTools button:disabled, #signOut:disabled { opacity: .6; cursor: not-allowed; }
+
+#courseList,
+#participantList,
+#moduleList {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.admin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcfa;
+}
+.admin-item > div:first-child { display: grid; gap: 4px; min-width: 0; }
+.admin-item strong { color: var(--ink); font-size: 14px; }
+.admin-item small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.admin-item > div:last-child { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.admin-item button { min-height: 36px !important; padding: 8px 12px !important; font-size: 12px !important; }
+
+.admin-badge {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: #e8f2e9;
+  color: #245b39;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#courseStatus,
+#moduleStatus,
+#enrollmentStatus,
+#participantListStatus {
+  min-height: 20px;
+  margin-top: 10px;
+  color: #356b4d;
+  font-size: 13px;
+}
+
+#participantIdentity, #adminIdentity {
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+#courseContent { margin-top: 25px; }
+.module-card {
+  margin: 18px 0;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+.module-card h3 { margin: 0 0 8px; font: 700 19px Manrope,sans-serif; }
+.module-card p { color: var(--muted); }
+.module-card iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 0;
+  border-radius: 10px;
+  background: #101b16;
+  margin-top: 16px;
+}
+#signOut { min-width: 110px; }
+
+@media (max-width:700px) {
+  .container { width: min(100% - 32px,1180px); }
+  .login-main, .dashboard-main, .admin-main, .participant-main,
+  main:has(#adminTools), main:has(.login-card), main:has(#courseContent) {
+    width: min(100% - 32px,1180px);
+    padding: 35px 0 55px;
+  }
+  .login-card { padding: 28px 22px; }
+  #adminTools > section, .admin-panel, .dashboard-card, .panel { padding: 20px 16px; }
+  #adminTools form { grid-template-columns: 1fr; }
+  .admin-item { align-items: flex-start; flex-direction: column; }
+  .admin-item > div:last-child { justify-content: flex-start; }
+  .site-header { gap: 12px; }
+  #signOut { min-width: auto; padding: 9px 13px; }
+}

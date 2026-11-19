@@ -1,5 +1,8 @@
 
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
   doc,
@@ -16,14 +19,76 @@ const accessMessage = document.getElementById("accessMessage");
 const courseContent = document.getElementById("courseContent");
 const moduleList = document.getElementById("moduleList");
 
-function showAccessMessage(message) {
+function showAccessDenied() {
   accessMessage.hidden = false;
-  accessMessage.textContent = message;
+  accessMessage.textContent =
+    "You have no access to the content. Kindly contact the administrator.";
   courseContent.hidden = true;
 }
 
-function showError(message) {
-  showAccessMessage(message);
+function getDriveEmbedUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+
+    if (host === "drive.google.com") {
+      const match = parsed.pathname.match(/\/file\/d\/([^/]+)/);
+
+      if (match) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+
+      const id = parsed.searchParams.get("id");
+
+      if (id) {
+        return `https://drive.google.com/file/d/${id}/preview`;
+      }
+    }
+
+    if (host === "docs.google.com") {
+      return url;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function createModuleCard(module) {
+  const card = document.createElement("article");
+  card.className = "module-card";
+
+  const heading = document.createElement("h3");
+  heading.textContent = module.title || "Untitled module";
+
+  card.appendChild(heading);
+
+  if (module.description) {
+    const description = document.createElement("p");
+    description.textContent = module.description;
+    card.appendChild(description);
+  }
+
+  const embedUrl = getDriveEmbedUrl(module.videoUrl || "");
+
+  if (embedUrl) {
+    const frame = document.createElement("iframe");
+    frame.src = embedUrl;
+    frame.title = module.title || "Course video";
+    frame.loading = "lazy";
+    frame.allow = "autoplay; encrypted-media; picture-in-picture";
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+
+    card.appendChild(frame);
+  } else {
+    const message = document.createElement("p");
+    message.textContent = "Video is currently unavailable.";
+    card.appendChild(message);
+  }
+
+  return card;
 }
 
 document.getElementById("signOut")?.addEventListener("click", async () => {
@@ -31,17 +96,28 @@ document.getElementById("signOut")?.addEventListener("click", async () => {
   window.location.replace("login.html");
 });
 
-async function loadParticipantCourse(user) {
-  try {
-    document.getElementById("participantIdentity").textContent =
-      user.displayName || user.email || "Participant";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.replace("login.html");
+    return;
+  }
 
-    // Read participant record
-    const participantRef = doc(db, "participants", user.uid);
-    const participantSnap = await getDoc(participantRef);
+  try {
+    const adminSnap = await getDoc(
+      doc(db, "admins", user.uid)
+    );
+
+    if (adminSnap.exists() && adminSnap.data().role === "admin") {
+      window.location.replace("dashboard.html");
+      return;
+    }
+
+    const participantSnap = await getDoc(
+      doc(db, "participants", user.uid)
+    );
 
     if (!participantSnap.exists()) {
-      showError("You have no access to the content. Kindly contact the administrator.");
+      showAccessDenied();
       return;
     }
 
@@ -49,39 +125,42 @@ async function loadParticipantCourse(user) {
     const courseId = participant.courseId;
 
     if (!courseId) {
-      showError("You have no access to the content. Kindly contact the administrator.");
+      showAccessDenied();
       return;
     }
 
-    // Verify enrollment
-    const enrollmentId = `${user.uid}_${courseId}`;
-    const enrollmentRef = doc(db, "enrollments", enrollmentId);
-    const enrollmentSnap = await getDoc(enrollmentRef);
+    const enrollmentSnap = await getDoc(
+      doc(db, "enrollments", `${user.uid}_${courseId}`)
+    );
 
-    if (!enrollmentSnap.exists() ||
-        enrollmentSnap.data().status !== "approved") {
-      showError("You have no access to the content. Kindly contact the administrator.");
+    if (
+      !enrollmentSnap.exists() ||
+      enrollmentSnap.data().status !== "approved"
+    ) {
+      showAccessDenied();
       return;
     }
 
-    // Load assigned course
-    const courseRef = doc(db, "courses", courseId);
-    const courseSnap = await getDoc(courseRef);
+    const courseSnap = await getDoc(
+      doc(db, "courses", courseId)
+    );
 
     if (!courseSnap.exists() || courseSnap.data().published !== true) {
-      showError("Your assigned course is currently unavailable.");
+      showAccessDenied();
       return;
     }
 
     const course = courseSnap.data();
 
+    document.getElementById("participantIdentity").textContent =
+      user.displayName || user.email || "Participant";
+
     document.getElementById("courseTitle").textContent =
-      course.title || "Untitled course";
+      course.title || "My Course";
 
     document.getElementById("courseDescription").textContent =
       course.description || "";
 
-    // Load published modules
     const modulesQuery = query(
       collection(db, "modules"),
       where("courseId", "==", courseId),
@@ -90,80 +169,27 @@ async function loadParticipantCourse(user) {
 
     const modulesSnap = await getDocs(modulesQuery);
 
+    const modules = modulesSnap.docs.map(item => item.data());
+
+    modules.sort((a, b) => (a.order || 0) - (b.order || 0));
+
     moduleList.replaceChildren();
 
-    if (modulesSnap.empty) {
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.textContent = "No learning modules are available yet.";
+    if (!modules.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Course modules will be available soon.";
       moduleList.appendChild(empty);
     } else {
-      const modules = modulesSnap.docs.map(item => ({
-        id: item.id,
-        ...item.data()
-      }));
-
-      modules.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-      for (const module of modules) {
-        const item = document.createElement("article");
-        item.className = "module-item";
-
-        const title = document.createElement("h3");
-        title.textContent = module.title || "Untitled module";
-
-        const description = document.createElement("p");
-        description.textContent = module.description || "";
-
-        item.append(title, description);
-
-        if (module.videoUrl) {
-          const link = document.createElement("a");
-          link.href = module.videoUrl;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.className = "button button-dark";
-          link.textContent = "Open learning video";
-          item.appendChild(link);
-        }
-
-        moduleList.appendChild(item);
-      }
+      modules.forEach(module => {
+        moduleList.appendChild(createModuleCard(module));
+      });
     }
 
     accessMessage.hidden = true;
     courseContent.hidden = false;
 
   } catch (error) {
-    console.error("Participant access error:", error);
-
-    showError(
-      "Unable to verify your course access. Please try again or contact the administrator."
-    );
-  }
-}
-
-// Authentication check
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  // Administrators should use the admin dashboard
-  try {
-    const adminRef = doc(db, "admins", user.uid);
-    const adminSnap = await getDoc(adminRef);
-
-    if (adminSnap.exists() && adminSnap.data().role === "admin") {
-      window.location.replace("dashboard.html");
-      return;
-    }
-
-    await loadParticipantCourse(user);
-
-  } catch (error) {
-    console.error(error);
-    showError("Unable to verify your account. Please try again.");
+    console.error("Participant dashboard error:", error);
+    showAccessDenied();
   }
 });

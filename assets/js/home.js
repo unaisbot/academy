@@ -1,0 +1,1 @@
+import {render} from "./courses.js"; render("featuredCourses","homeCourseMessage",3);

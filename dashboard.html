@@ -65,7 +65,15 @@
             placeholder="Brief course overview"></textarea>
         </label>
 
-        <button class="button" type="submit">Create course</button>
+        <label>
+          Initial status
+          <select id="coursePublished">
+            <option value="false" selected>Draft — admin only</option>
+            <option value="true">Published</option>
+          </select>
+        </label>
+
+        <button class="button" type="submit">Create draft course</button>
 
         <div id="courseStatus" class="admin-status" aria-live="polite"></div>
       </form>
@@ -115,8 +123,8 @@
         <label>
           Publication status
           <select id="modulePublished" required>
+            <option value="false" selected>Draft</option>
             <option value="true">Published</option>
-            <option value="false">Draft</option>
           </select>
         </label>
 
@@ -124,6 +132,19 @@
 
         <div id="moduleStatus" class="admin-status" aria-live="polite"></div>
       </form>
+
+      <div class="module-manager">
+        <h3>Manage course modules</h3>
+        <p class="panel-help">Choose a course to view, edit, preview or delete its modules.</p>
+        <label class="module-manager-select">
+          Select course
+          <select id="manageModuleCourse">
+            <option value="">Select a course</option>
+          </select>
+        </label>
+        <div id="managedModuleList" class="admin-list"></div>
+        <div id="managedModuleStatus" class="admin-status" aria-live="polite"></div>
+      </div>
     </section>
 
     <!-- PARTICIPANT APPROVAL -->
@@ -199,6 +220,13 @@
   </div>
 </div>
 </main>
+
+<dialog id="adminEditorDialog" class="admin-dialog">
+  <form method="dialog" class="dialog-close-form">
+    <button class="dialog-close" aria-label="Close">×</button>
+  </form>
+  <div id="adminEditorContent"></div>
+</dialog>
 
 <footer class="site-footer">
   <span>© <span id="year"></span> TBARC Academy</span>

@@ -2,7 +2,8 @@
 import {
   signInWithPopup,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
@@ -10,114 +11,93 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-import { auth, googleProvider, db } from "./firebase.js";
+import {
+  auth,
+  db,
+  googleProvider
+} from "./firebase.js";
 
-const button = document.getElementById("googleSignIn");
-const message = document.getElementById("loginMessage");
+const googleSignIn = document.getElementById("googleSignIn");
+const loginMessage = document.getElementById("loginMessage");
 
-function showMessage(text) {
-  if (message) message.textContent = text;
+function showMessage(message) {
+  loginMessage.textContent = message;
 }
 
-function showError(error) {
-  console.error("TBARC Academy login error:", error);
+googleSignIn.addEventListener("click", async () => {
+  googleSignIn.disabled = true;
+  showMessage("Signing in with Google…");
 
-  const messages = {
-    "auth/popup-blocked":
-      "Google login popup was blocked. Allow popups for this website.",
-    "auth/popup-closed-by-user":
-      "Google login popup was closed before completing sign-in.",
-    "auth/unauthorized-domain":
-      "This domain is not authorized in Firebase Authentication.",
-    "auth/operation-not-allowed":
-      "Google sign-in is not enabled in Firebase.",
-    "auth/network-request-failed":
-      "Network connection failed. Please try again.",
-    "auth/too-many-requests":
-      "Too many attempts. Please wait and try again."
-  };
+  try {
+    await setPersistence(auth, browserLocalPersistence);
 
-  showMessage(
-    messages[error.code] ||
-    `${error.code || "Login error"}: ${error.message || "Please try again."}`
-  );
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
 
-  if (button) button.disabled = false;
-}
-
-async function checkUserAccess(user) {
-  showMessage("Checking your account and course access…");
-
-  // 1. Check administrator access
-  const adminRef = doc(db, "admins", user.uid);
-  const adminSnap = await getDoc(adminRef);
-
-  if (adminSnap.exists() && adminSnap.data().role === "admin") {
-    showMessage("Administrator verified. Opening dashboard…");
-    window.location.replace("dashboard.html");
-    return;
-  }
-
-  // 2. Check participant record
-  const participantRef = doc(db, "participants", user.uid);
-  const participantSnap = await getDoc(participantRef);
-
-  if (!participantSnap.exists()) {
-    showMessage(
-      "You have no access to the content. Kindly contact the administrator."
+    // Check administrator access
+    const adminSnap = await getDoc(
+      doc(db, "admins", user.uid)
     );
-    button.disabled = false;
-    return;
-  }
 
-  const participant = participantSnap.data();
-  const courseId = participant.courseId;
-
-  if (!courseId) {
-    showMessage(
-      "You have no access to the content. Kindly contact the administrator."
-    );
-    button.disabled = false;
-    return;
-  }
-
-  // 3. Check approved enrollment
-  const enrollmentId = `${user.uid}_${courseId}`;
-  const enrollmentRef = doc(db, "enrollments", enrollmentId);
-  const enrollmentSnap = await getDoc(enrollmentRef);
-
-  if (
-    !enrollmentSnap.exists() ||
-    enrollmentSnap.data().status !== "approved"
-  ) {
-    showMessage(
-      "You have no access to the content. Kindly contact the administrator."
-    );
-    button.disabled = false;
-    return;
-  }
-
-  // 4. Participant access confirmed
-  showMessage("Access approved. Opening your course…");
-  window.location.replace("my-course.html");
-}
-
-if (button) {
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    showMessage("Connecting to Google…");
-
-    try {
-      await setPersistence(auth, browserLocalPersistence);
-
-      const result = await signInWithPopup(auth, googleProvider);
-
-      if (result.user) {
-        await checkUserAccess(result.user);
-      }
-
-    } catch (error) {
-      showError(error);
+    if (
+      adminSnap.exists() &&
+      adminSnap.data().role === "admin"
+    ) {
+      window.location.replace("dashboard.html");
+      return;
     }
-  });
-}
+
+    // Check participant record
+    const participantSnap = await getDoc(
+      doc(db, "participants", user.uid)
+    );
+
+    if (!participantSnap.exists()) {
+      showMessage(
+        "You have no access to the content. Kindly contact the administrator."
+      );
+      await signOut(auth);
+      return;
+    }
+
+    const participant = participantSnap.data();
+    const courseId = participant.courseId;
+
+    if (!courseId) {
+      showMessage(
+        "You have no access to the content. Kindly contact the administrator."
+      );
+      await signOut(auth);
+      return;
+    }
+
+    // Check enrollment approval
+    const enrollmentSnap = await getDoc(
+      doc(db, "enrollments", `${user.uid}_${courseId}`)
+    );
+
+    if (
+      !enrollmentSnap.exists() ||
+      enrollmentSnap.data().status !== "approved"
+    ) {
+      showMessage(
+        "You have no access to the content. Kindly contact the administrator."
+      );
+      await signOut(auth);
+      return;
+    }
+
+    // Approved participant
+    window.location.replace("my-course.html");
+
+  } catch (error) {
+    console.error("Login error:", error);
+
+    showMessage(
+      error.message || "Sign-in failed. Please try again."
+    );
+
+  } finally {
+    googleSignIn.disabled = false;
+  }
+});

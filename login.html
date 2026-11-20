@@ -1,59 +1,114 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Login | TBARC Academy</title>
+
+  <meta name="theme-color" content="#123f32">
+  <meta name="description" content="Secure login to TBARC Academy learning platform.">
+
+  <!-- TBARC Favicon -->
+  <link
+    rel="icon"
+    type="image/png"
+    href="/assets/images/favicon.png"
+  >
+
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body class="login-page">
 
+  <!-- Header -->
   <header class="site-header">
     <div class="container nav-wrap">
+
       <a class="brand" href="index.html">
-        <span class="brand-mark">T</span>
+
+        <img
+          src="/assets/images/logo.png"
+          alt="TBARC Academy Logo"
+          class="brand-logo"
+          style="width:48px;height:48px;object-fit:contain;"
+        >
+
         <span>
           <strong>TBARC ACADEMY</strong>
           <small>Learning &amp; Research</small>
         </span>
+
       </a>
 
-      <a class="back-home" href="index.html">← Home</a>
+      <a class="back-home" href="index.html">
+        ← Home
+      </a>
+
     </div>
   </header>
 
+  <!-- Login Section -->
   <main class="login-main">
+
     <div class="login-card">
 
-      <span class="brand-mark large">T</span>
+      <!-- Large TBARC Logo -->
+      <img
+        src="/assets/images/logo.png"
+        alt="TBARC Academy"
+        class="login-logo"
+        style="width:90px;height:90px;object-fit:contain;display:block;margin-bottom:28px;"
+      >
 
       <span class="section-label" id="loginLabel">
         SECURE LOGIN
       </span>
 
-      <h1 id="loginTitle">Welcome back</h1>
+      <h1 id="loginTitle">
+        Welcome back
+      </h1>
 
       <p id="loginDescription">
         Sign in using your registered Google account.
       </p>
 
-      <button class="button google-button" id="googleSignIn" type="button">
+      <!-- Google Sign In -->
+      <button
+        class="button google-button"
+        id="googleSignIn"
+        type="button"
+      >
         <span class="google-g">G</span>
         Continue with Google
       </button>
 
-      <p id="loginMessage" class="login-help" aria-live="polite"></p>
+      <!-- Login Status -->
+      <p
+        id="loginMessage"
+        class="login-help"
+        aria-live="polite"
+      ></p>
 
-      <small class="secure-note" id="loginSecureNote">
+      <small
+        class="secure-note"
+        id="loginSecureNote"
+      >
         Access is restricted to authorised users.
       </small>
 
     </div>
+
   </main>
 
-  <script type="module" src="assets/js/login.js"></script>
+  <!-- Existing Login JavaScript -->
+  <script
+    type="module"
+    src="assets/js/login.js"
+  ></script>
 
 </body>
 </html>

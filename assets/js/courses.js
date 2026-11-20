@@ -8,26 +8,22 @@ import {
 
 import { db } from "./firebase.js";
 
+// Create an individual course card
 function createCourseCard(course) {
   const article = document.createElement("article");
   article.className = "course-card";
 
+  // Course visual
   const visual = document.createElement("div");
   visual.className = "course-visual";
 
-  if (course.image) {
-    const image = document.createElement("img");
-    image.src = course.image;
-    image.alt = course.title || "Course image";
-    image.className = "course-card-image";
-    visual.appendChild(image);
-  } else {
-    const mark = document.createElement("span");
-    mark.className = "course-visual-mark";
-    mark.textContent = "TBARC";
-    visual.appendChild(mark);
-  }
+  const mark = document.createElement("span");
+  mark.className = "course-visual-mark";
+  mark.textContent = "TBARC";
 
+  visual.appendChild(mark);
+
+  // Course content
   const content = document.createElement("div");
   content.className = "course-card-content";
 
@@ -45,47 +41,56 @@ function createCourseCard(course) {
     course.description ||
     "Course information will be updated soon.";
 
-  const details = document.createElement("a");
-  details.className = "button button-dark";
-  details.href = `course.html?id=${encodeURIComponent(course.id)}`;
-  details.textContent = "View course details →";
+  // Course-specific login link
+  const accessLink = document.createElement("a");
+  accessLink.className = "button button-dark";
+  accessLink.href =
+    `login.html?course=${encodeURIComponent(course.id)}`;
+  accessLink.textContent = "Sign in to access →";
 
-  content.append(label, title, description, details);
+  content.append(
+    label,
+    title,
+    description,
+    accessLink
+  );
+
   article.append(visual, content);
 
   return article;
 }
 
-async function render(targetId, messageId, limit = 0) {
+// Load all published courses from Firestore
+async function render(targetId, messageId) {
   const target = document.getElementById(targetId);
+
   if (!target) return;
 
   try {
-    const snap = await getDocs(
-      query(
-        collection(db, "courses"),
-        where("published", "==", true)
-      )
+    const coursesQuery = query(
+      collection(db, "courses"),
+      where("published", "==", true)
     );
 
-    const courses = snap.docs.map(item => ({
-      id: item.id,
-      ...item.data()
+    const snapshot = await getDocs(coursesQuery);
+
+    const courses = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
     }));
 
-    courses.sort(
-      (a, b) =>
-        (b.createdAt?.seconds || 0) -
-        (a.createdAt?.seconds || 0)
-    );
+    // Sort by newest course first
+    courses.sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+
+      return dateB - dateA;
+    });
 
     target.replaceChildren();
 
-    const displayed = limit
-      ? courses.slice(0, limit)
-      : courses;
-
-    if (!displayed.length) {
+    // No published courses
+    if (courses.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
 
@@ -98,12 +103,21 @@ async function render(targetId, messageId, limit = 0) {
 
       empty.append(heading, message);
       target.appendChild(empty);
+
       return;
     }
 
-    displayed.forEach(course => {
-      target.appendChild(createCourseCard(course));
+    // Display every published course
+    courses.forEach(course => {
+      const card = createCourseCard(course);
+      target.appendChild(card);
     });
+
+    const status = document.getElementById(messageId);
+
+    if (status) {
+      status.textContent = "";
+    }
 
   } catch (error) {
     console.error("Course loading error:", error);
@@ -124,6 +138,7 @@ async function render(targetId, messageId, limit = 0) {
     target.appendChild(empty);
 
     const status = document.getElementById(messageId);
+
     if (status) {
       status.textContent =
         "Please check the Firestore public course read permissions.";

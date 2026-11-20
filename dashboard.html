@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,95 +44,86 @@
   <div id="adminTools" class="admin-grid" hidden>
 
     <!-- COURSE MANAGEMENT -->
-    
-<!-- COURSE MANAGEMENT -->
-<section class="admin-panel">
-  <h2>Course management</h2>
-  <p class="panel-help">
-    Create and manage courses offered through TBARC Academy.
-  </p>
+    <section class="admin-panel">
+      <h2>Course management</h2>
+      <p class="panel-help">
+        Create and manage courses offered through TBARC Academy.
+      </p>
 
-  <form id="courseForm" class="admin-form">
+      <form id="courseForm" class="admin-form">
 
-    <label>
-      Course title
-      <input id="courseTitle" required maxlength="120"
-        placeholder="Course name">
-    </label>
+        <label>
+          Course title
+          <input id="courseTitle" required maxlength="120"
+            placeholder="Course name">
+        </label>
 
-    <label>
-      Short description
-      <textarea id="courseShortDescription" maxlength="500"
-        placeholder="Brief introduction shown on course cards"></textarea>
-    </label>
+        <label>
+          Short description
+          <textarea id="courseShortDescription" maxlength="500"
+            placeholder="Brief introduction shown on course cards"></textarea>
+        </label>
 
-    <label>
-      Full course description
-      <textarea id="courseDescription" rows="5"
-        placeholder="Detailed course overview"></textarea>
-    </label>
+        <label>
+          Full course description
+          <textarea id="courseDescription" rows="5"
+            placeholder="Detailed course overview"></textarea>
+        </label>
 
-    <label>
-      Course image path
-      <input id="courseImage" type="text"
-        placeholder="assets/images/courses/maxent.jpg">
-      <small>Use an image stored in your GitHub repository.</small>
-    </label>
+        <label>
+          Course image path
+          <input id="courseImage" type="text"
+            placeholder="assets/images/courses/maxent.jpg">
+          <small>Use an image stored in your GitHub repository.</small>
+        </label>
 
-    <label>
-      Duration
-      <input id="courseDuration"
-        placeholder="e.g. 5 Days">
-    </label>
+        <label>
+          Duration
+          <input id="courseDuration" placeholder="e.g. 5 Days">
+        </label>
 
-    <label>
-      Mode
-      <input id="courseMode"
-        placeholder="e.g. Online / Offline / Hybrid">
-    </label>
+        <label>
+          Mode
+          <input id="courseMode" placeholder="e.g. Online / Offline / Hybrid">
+        </label>
 
-    <label>
-      Instructor
-      <input id="courseInstructor"
-        placeholder="Instructor name">
-    </label>
+        <label>
+          Instructor
+          <input id="courseInstructor" placeholder="Instructor name">
+        </label>
 
-    <label>
-      Course fee
-      <input id="courseFee"
-        placeholder="e.g. ₹1,500 / Free">
-    </label>
+        <label>
+          Course fee
+          <input id="courseFee" placeholder="e.g. ₹1,500 / Free">
+        </label>
 
-    <label>
-      Learning objectives
-      <textarea id="courseObjectives" rows="5"
-        placeholder="Enter one objective per line"></textarea>
-    </label>
+        <label>
+          Learning objectives
+          <textarea id="courseObjectives" rows="5"
+            placeholder="Enter one objective per line"></textarea>
+        </label>
 
-    <label>
-      Syllabus
-      <textarea id="courseSyllabus" rows="7"
-        placeholder="Enter one syllabus topic per line"></textarea>
-    </label>
+        <label>
+          Syllabus
+          <textarea id="courseSyllabus" rows="7"
+            placeholder="Enter one syllabus topic per line"></textarea>
+        </label>
 
-    <label>
-      Initial status
-      <select id="coursePublished">
-        <option value="false" selected>Draft — admin only</option>
-        <option value="true">Published</option>
-      </select>
-    </label>
+        <label>
+          Initial status
+          <select id="coursePublished">
+            <option value="false" selected>Draft — admin only</option>
+            <option value="true">Published</option>
+          </select>
+        </label>
 
-    <button class="button" type="submit">Create course</button>
+        <button class="button" type="submit">Create course</button>
 
-    <div id="courseStatus" class="admin-status"
-      aria-live="polite"></div>
+        <div id="courseStatus" class="admin-status" aria-live="polite"></div>
+      </form>
 
-  </form>
-
-  <div id="courseList" class="admin-list"></div>
-</section>
-
+      <div id="courseList" class="admin-list"></div>
+    </section>
 
     <!-- MODULE MANAGEMENT -->
     <section class="admin-panel">

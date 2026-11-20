@@ -1,3 +1,4 @@
+
 import {
   onAuthStateChanged,
   signOut
@@ -58,12 +59,16 @@ function courseName(courseId) {
 // SIGN OUT
 byId("signOut")?.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.replace("login.html");
+  window.location.replace("login.html?admin=1");
 });
 
 // COURSE SELECTS
 function populateCourseSelects() {
-  for (const selectId of ["moduleCourse", "enrollmentCourse", "manageModuleCourse"]) {
+  for (const selectId of [
+    "moduleCourse",
+    "enrollmentCourse",
+    "manageModuleCourse"
+  ]) {
     const select = byId(selectId);
     if (!select) continue;
 
@@ -78,7 +83,8 @@ function populateCourseSelects() {
     courses.forEach(course => {
       const option = document.createElement("option");
       option.value = course.id;
-      option.textContent = `${course.title || "Untitled course"}${course.published ? " · Published" : " · Draft"}`;
+      option.textContent =
+        `${course.title || "Untitled course"}${course.published ? " · Published" : " · Draft"}`;
       select.appendChild(option);
     });
 
@@ -96,14 +102,20 @@ function populateCourseSelects() {
 function openDialog(contentBuilder) {
   const dialog = byId("adminEditorDialog");
   const content = byId("adminEditorContent");
+
   content.replaceChildren();
   contentBuilder(content);
-  if (typeof dialog.showModal === "function") dialog.showModal();
-  else dialog.setAttribute("open", "");
+
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+  } else {
+    dialog.setAttribute("open", "");
+  }
 }
 
 function closeDialog() {
   const dialog = byId("adminEditorDialog");
+
   if (dialog?.open) dialog.close();
   else dialog?.removeAttribute("open");
 }
@@ -126,10 +138,12 @@ function addField(root, labelText, id, value, type = "text") {
   label.textContent = labelText;
 
   let input;
+
   if (type === "textarea") {
     input = document.createElement("textarea");
   } else if (type === "select") {
     input = document.createElement("select");
+
     [["false", "Draft"], ["true", "Published"]].forEach(([v, text]) => {
       const option = document.createElement("option");
       option.value = v;
@@ -143,8 +157,10 @@ function addField(root, labelText, id, value, type = "text") {
 
   input.id = id;
   input.value = value ?? "";
+
   label.appendChild(input);
   root.appendChild(label);
+
   return input;
 }
 
@@ -155,11 +171,16 @@ function addDialogActions(root, onSave, saveLabel = "Save changes") {
   const save = makeButton(saveLabel, "button button-dark", onSave);
   save.type = "button";
 
-  const cancel = makeButton("Cancel", "button button-light", closeDialog);
+  const cancel = makeButton(
+    "Cancel",
+    "button button-light",
+    closeDialog
+  );
   cancel.type = "button";
 
   actions.append(save, cancel);
   root.appendChild(actions);
+
   return save;
 }
 
@@ -190,11 +211,13 @@ async function loadCourses() {
     item.className = "admin-item";
 
     const info = document.createElement("div");
+
     const title = document.createElement("strong");
     title.textContent = course.title || "Untitled course";
 
     const description = document.createElement("small");
-    description.textContent = course.description || "No description";
+    description.textContent =
+      course.shortDescription || course.description || "No description";
 
     info.append(title, description);
 
@@ -204,14 +227,29 @@ async function loadCourses() {
     badge.className = "admin-badge";
     badge.textContent = course.published ? "Published" : "Draft";
 
-    const edit = makeButton("Edit", "button button-light", () => editCourse(course));
-    const preview = makeButton("Preview", "button button-light", () => previewCourse(course));
+    const edit = makeButton(
+      "Edit",
+      "button button-light",
+      () => editCourse(course)
+    );
+
+    const preview = makeButton(
+      "Preview",
+      "button button-light",
+      () => previewCourse(course)
+    );
+
     const publish = makeButton(
       course.published ? "Unpublish" : "Publish",
       "button button-dark",
       () => toggleCoursePublication(course)
     );
-    const remove = makeButton("Delete", "button button-dark danger-button", () => deleteCourse(course));
+
+    const remove = makeButton(
+      "Delete",
+      "button button-dark danger-button",
+      () => deleteCourse(course)
+    );
 
     actions.append(badge, edit, preview, publish, remove);
     item.append(info, actions);
@@ -219,43 +257,131 @@ async function loadCourses() {
   });
 
   populateCourseSelects();
+
   if (selectedModuleCourse) {
     byId("manageModuleCourse").value = selectedModuleCourse;
     await loadManagedModules(selectedModuleCourse);
   }
 }
 
+// EDIT COURSE
 function editCourse(course) {
   openDialog(root => {
-    addDialogHeading(root, "Edit course", "Update the course details and publication status.");
+    addDialogHeading(
+      root,
+      "Edit course",
+      "Update course information, learning content and publication status."
+    );
 
-    const title = addField(root, "Course title", "editCourseTitle", course.title || "");
-    const description = addField(root, "Description", "editCourseDescription", course.description || "", "textarea");
-    const published = addField(root, "Publication status", "editCoursePublished", String(course.published === true), "select");
+    const title = addField(
+      root, "Course title", "editCourseTitle",
+      course.title || ""
+    );
+
+    const shortDescription = addField(
+      root, "Short description", "editCourseShortDescription",
+      course.shortDescription || "", "textarea"
+    );
+
+    const description = addField(
+      root, "Full course description", "editCourseDescription",
+      course.description || "", "textarea"
+    );
+
+    const image = addField(
+      root, "Course image path", "editCourseImage",
+      course.image || ""
+    );
+
+    const duration = addField(
+      root, "Duration", "editCourseDuration",
+      course.duration || ""
+    );
+
+    const mode = addField(
+      root, "Mode", "editCourseMode",
+      course.mode || ""
+    );
+
+    const instructor = addField(
+      root, "Instructor", "editCourseInstructor",
+      course.instructor || ""
+    );
+
+    const fee = addField(
+      root, "Course fee", "editCourseFee",
+      course.fee || ""
+    );
+
+    const objectives = addField(
+      root,
+      "Learning objectives (one per line)",
+      "editCourseObjectives",
+      Array.isArray(course.objectives)
+        ? course.objectives.join("\n")
+        : course.objectives || "",
+      "textarea"
+    );
+
+    const syllabus = addField(
+      root,
+      "Syllabus (one topic per line)",
+      "editCourseSyllabus",
+      Array.isArray(course.syllabus)
+        ? course.syllabus.join("\n")
+        : course.syllabus || "",
+      "textarea"
+    );
+
+    const published = addField(
+      root, "Publication status", "editCoursePublished",
+      String(course.published === true), "select"
+    );
 
     addDialogActions(root, async () => {
       const save = root.querySelector(".dialog-actions button");
       save.disabled = true;
+
       try {
+        const splitLines = value =>
+          value.split("\n")
+            .map(item => item.trim())
+            .filter(Boolean);
+
         await updateDoc(doc(db, "courses", course.id), {
           title: title.value.trim(),
+          shortDescription: shortDescription.value.trim(),
           description: description.value.trim(),
+          image: image.value.trim(),
+          duration: duration.value.trim(),
+          mode: mode.value.trim(),
+          instructor: instructor.value.trim(),
+          fee: fee.value.trim(),
+          objectives: splitLines(objectives.value),
+          syllabus: splitLines(syllabus.value),
           published: published.value === "true",
           updatedAt: serverTimestamp()
         });
+
         closeDialog();
         status("courseStatus", "Course updated successfully.");
         await loadCourses();
+
       } catch (error) {
-        status("courseStatus", `Could not update course: ${showError(error)}`);
+        status(
+          "courseStatus",
+          `Could not update course: ${showError(error)}`
+        );
         save.disabled = false;
       }
     });
   });
 }
 
+// PUBLISH / UNPUBLISH COURSE
 async function toggleCoursePublication(course) {
   const next = !course.published;
+
   const prompt = next
     ? `Publish "${course.title}"? It will become visible on the public Courses page.`
     : `Unpublish "${course.title}"? It will no longer be publicly listed and participant access to its course page will be blocked.`;
@@ -267,56 +393,164 @@ async function toggleCoursePublication(course) {
       published: next,
       updatedAt: serverTimestamp()
     });
-    status("courseStatus", next ? "Course published." : "Course unpublished.");
+
+    status(
+      "courseStatus",
+      next ? "Course published." : "Course unpublished."
+    );
+
     await loadCourses();
+
   } catch (error) {
-    status("courseStatus", `Could not change publication status: ${showError(error)}`);
+    status(
+      "courseStatus",
+      `Could not change publication status: ${showError(error)}`
+    );
   }
 }
 
+// DELETE COURSE
 async function deleteCourse(course) {
   const confirmed = window.confirm(
     `Delete the course "${course.title}" and all its modules? This cannot be undone.`
   );
+
   if (!confirmed) return;
 
   try {
-    const participantsSnap = await getDocs(collection(db, "participants"));
-    const assigned = participantsSnap.docs.some(p => p.data().courseId === course.id);
+    const participantsSnap = await getDocs(
+      collection(db, "participants")
+    );
+
+    const assigned = participantsSnap.docs.some(
+      p => p.data().courseId === course.id
+    );
+
     if (assigned) {
-      throw new Error("This course has participant assignments. Revoke or reassign access before deleting it.");
+      throw new Error(
+        "This course has participant assignments. Revoke or reassign access before deleting it."
+      );
     }
 
     const modulesSnap = await getDocs(
-      query(collection(db, "modules"), where("courseId", "==", course.id))
+      query(
+        collection(db, "modules"),
+        where("courseId", "==", course.id)
+      )
     );
 
     const batch = writeBatch(db);
-    modulesSnap.docs.forEach(moduleDoc => batch.delete(moduleDoc.ref));
+
+    modulesSnap.docs.forEach(moduleDoc => {
+      batch.delete(moduleDoc.ref);
+    });
+
     batch.delete(doc(db, "courses", course.id));
+
     await batch.commit();
 
     status("courseStatus", "Course and its modules deleted.");
     await loadCourses();
+
   } catch (error) {
-    status("courseStatus", `Could not delete course: ${showError(error)}`);
+    status(
+      "courseStatus",
+      `Could not delete course: ${showError(error)}`
+    );
   }
 }
+
+// PREVIEW COURSE
 async function previewCourse(course) {
   try {
     const modulesSnap = await getDocs(
-      query(collection(db, "modules"), where("courseId", "==", course.id))
+      query(
+        collection(db, "modules"),
+        where("courseId", "==", course.id)
+      )
     );
-    const modules = modulesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+    const modules = modulesSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     openDialog(root => {
-      addDialogHeading(root, `Preview: ${course.title || "Untitled course"}`,
-        `${course.published ? "Published course" : "Draft preview"} · ${modules.length} module(s)`);
+      addDialogHeading(
+        root,
+        `Preview: ${course.title || "Untitled course"}`,
+        `${course.published ? "Published course" : "Draft preview"} · ${modules.length} module(s)`
+      );
+
+      if (course.image) {
+        const image = document.createElement("img");
+        image.src = course.image;
+        image.alt = course.title || "Course image";
+        image.style.width = "100%";
+        image.style.maxHeight = "220px";
+        image.style.objectFit = "cover";
+        image.style.borderRadius = "12px";
+        root.appendChild(image);
+      }
+
+      const addDetail = (label, value) => {
+        if (!value) return;
+
+        const paragraph = document.createElement("p");
+        const strong = document.createElement("strong");
+
+        strong.textContent = `${label}: `;
+        paragraph.append(
+          strong,
+          document.createTextNode(value)
+        );
+
+        root.appendChild(paragraph);
+      };
+
+      addDetail("Short description", course.shortDescription);
+      addDetail("Duration", course.duration);
+      addDetail("Mode", course.mode);
+      addDetail("Instructor", course.instructor);
+      addDetail("Fee", course.fee);
 
       const description = document.createElement("p");
-      description.textContent = course.description || "No course description added.";
+      description.textContent =
+        course.description || "No course description added.";
+
       root.appendChild(description);
+
+      const addList = (heading, values) => {
+        if (!values || !values.length) return;
+
+        const title = document.createElement("h3");
+        title.textContent = heading;
+        root.appendChild(title);
+
+        const list = document.createElement("ul");
+
+        values.forEach(value => {
+          const item = document.createElement("li");
+          item.textContent = value;
+          list.appendChild(item);
+        });
+
+        root.appendChild(list);
+      };
+
+      const objectives = Array.isArray(course.objectives)
+        ? course.objectives
+        : (course.objectives || "").split("\n").filter(Boolean);
+
+      const syllabus = Array.isArray(course.syllabus)
+        ? course.syllabus
+        : (course.syllabus || "").split("\n").filter(Boolean);
+
+      addList("Learning objectives", objectives);
+      addList("Syllabus", syllabus);
+
+      const moduleHeading = document.createElement("h3");
+      moduleHeading.textContent = "Course modules";
+      root.appendChild(moduleHeading);
 
       if (!modules.length) {
         const empty = document.createElement("p");
@@ -330,19 +564,24 @@ async function previewCourse(course) {
         card.className = "preview-module";
 
         const heading = document.createElement("h3");
-        heading.textContent = `${module.order || ""}. ${module.title || "Untitled module"}`;
+        heading.textContent =
+          `${module.order || ""}. ${module.title || "Untitled module"}`;
 
         const detail = document.createElement("p");
-        detail.textContent = `${module.description || ""} · ${module.published ? "Published" : "Draft"}`;
+        detail.textContent =
+          `${module.description || ""} · ${module.published ? "Published" : "Draft"}`;
+
         card.append(heading, detail);
 
         const embed = driveEmbedUrl(module.videoUrl || "");
+
         if (embed) {
           const frame = document.createElement("iframe");
           frame.src = embed;
           frame.title = module.title || "Course video preview";
           frame.loading = "lazy";
-          frame.allow = "autoplay; encrypted-media; picture-in-picture";
+          frame.allow =
+            "autoplay; encrypted-media; picture-in-picture";
           frame.allowFullscreen = true;
           card.appendChild(frame);
         }
@@ -352,11 +591,19 @@ async function previewCourse(course) {
 
       const actions = document.createElement("div");
       actions.className = "dialog-actions";
-      actions.appendChild(makeButton("Close preview", "button button-dark", closeDialog));
+
+      actions.appendChild(
+        makeButton("Close preview", "button button-dark", closeDialog)
+      );
+
       root.appendChild(actions);
     });
+
   } catch (error) {
-    status("courseStatus", `Could not preview course: ${showError(error)}`);
+    status(
+      "courseStatus",
+      `Could not preview course: ${showError(error)}`
+    );
   }
 }
 
@@ -368,6 +615,7 @@ byId("manageModuleCourse")?.addEventListener("change", async event => {
 
 async function loadManagedModules(courseId) {
   if (!moduleList) return;
+
   moduleList.replaceChildren();
 
   if (!courseId) {
@@ -380,9 +628,14 @@ async function loadManagedModules(courseId) {
 
   try {
     const snap = await getDocs(
-      query(collection(db, "modules"), where("courseId", "==", courseId))
+      query(
+        collection(db, "modules"),
+        where("courseId", "==", courseId)
+      )
     );
-    const modules = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+    const modules = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     if (!modules.length) {
@@ -398,8 +651,10 @@ async function loadManagedModules(courseId) {
       item.className = "admin-item";
 
       const info = document.createElement("div");
+
       const title = document.createElement("strong");
-      title.textContent = `${module.order || ""}. ${module.title || "Untitled module"}`;
+      title.textContent =
+        `${module.order || ""}. ${module.title || "Untitled module"}`;
 
       const desc = document.createElement("small");
       desc.textContent = module.description || "No description";
@@ -407,50 +662,98 @@ async function loadManagedModules(courseId) {
       info.append(title, desc);
 
       const actions = document.createElement("div");
+
       const badge = document.createElement("span");
       badge.className = "admin-badge";
       badge.textContent = module.published ? "Published" : "Draft";
 
       actions.append(
         badge,
-        makeButton("Edit", "button button-light", () => editModule(module)),
-        makeButton("Preview", "button button-light", () => previewModule(module)),
+        makeButton(
+          "Edit",
+          "button button-light",
+          () => editModule(module)
+        ),
+        makeButton(
+          "Preview",
+          "button button-light",
+          () => previewModule(module)
+        ),
         makeButton(
           module.published ? "Unpublish" : "Publish",
           "button button-dark",
           () => toggleModulePublication(module)
         ),
-        makeButton("Delete", "button button-dark danger-button", () => deleteModule(module))
+        makeButton(
+          "Delete",
+          "button button-dark danger-button",
+          () => deleteModule(module)
+        )
       );
 
       item.append(info, actions);
       moduleList.appendChild(item);
     });
+
   } catch (error) {
-    status("managedModuleStatus", `Could not load modules: ${showError(error)}`);
+    status(
+      "managedModuleStatus",
+      `Could not load modules: ${showError(error)}`
+    );
   }
 }
 
+// EDIT MODULE
 function editModule(module) {
   openDialog(root => {
-    addDialogHeading(root, "Edit module", `Course: ${courseName(module.courseId)}`);
+    addDialogHeading(
+      root,
+      "Edit module",
+      `Course: ${courseName(module.courseId)}`
+    );
 
-    const title = addField(root, "Module title", "editModuleTitle", module.title || "");
-    const description = addField(root, "Description", "editModuleDescription", module.description || "", "textarea");
-    const video = addField(root, "Google Drive video URL", "editModuleVideo", module.videoUrl || "", "url");
-    const order = addField(root, "Display order", "editModuleOrder", String(module.order || 1), "number");
+    const title = addField(
+      root, "Module title", "editModuleTitle",
+      module.title || ""
+    );
+
+    const description = addField(
+      root, "Description", "editModuleDescription",
+      module.description || "", "textarea"
+    );
+
+    const video = addField(
+      root, "Google Drive video URL", "editModuleVideo",
+      module.videoUrl || "", "url"
+    );
+
+    const order = addField(
+      root, "Display order", "editModuleOrder",
+      String(module.order || 1), "number"
+    );
+
     order.min = "1";
-    const published = addField(root, "Publication status", "editModulePublished", String(module.published === true), "select");
+
+    const published = addField(
+      root, "Publication status", "editModulePublished",
+      String(module.published === true), "select"
+    );
 
     addDialogActions(root, async () => {
       const save = root.querySelector(".dialog-actions button");
       save.disabled = true;
+
       try {
         const parsed = new URL(video.value.trim());
+
         if (!["drive.google.com", "docs.google.com"].includes(parsed.hostname)) {
           throw new Error("Enter a valid Google Drive video URL.");
         }
-        if (!Number.isInteger(Number(order.value)) || Number(order.value) < 1) {
+
+        if (
+          !Number.isInteger(Number(order.value)) ||
+          Number(order.value) < 1
+        ) {
           throw new Error("Display order must be a positive whole number.");
         }
 
@@ -464,45 +767,73 @@ function editModule(module) {
         });
 
         closeDialog();
+
         status("managedModuleStatus", "Module updated successfully.");
+
         await loadManagedModules(module.courseId);
+
       } catch (error) {
-        status("managedModuleStatus", `Could not update module: ${showError(error)}`);
+        status(
+          "managedModuleStatus",
+          `Could not update module: ${showError(error)}`
+        );
+
         save.disabled = false;
       }
     });
   });
 }
 
+// GOOGLE DRIVE VIDEO URL
 function driveEmbedUrl(url) {
   try {
     const parsed = new URL(url);
+
     if (parsed.hostname === "drive.google.com") {
       const match = parsed.pathname.match(/\/file\/d\/([^/]+)/);
-      if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+
+      if (match) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+
       const id = parsed.searchParams.get("id");
-      if (id) return `https://drive.google.com/file/d/${id}/preview`;
+
+      if (id) {
+        return `https://drive.google.com/file/d/${id}/preview`;
+      }
     }
+
     if (parsed.hostname === "docs.google.com") return url;
+
   } catch {}
+
   return null;
 }
 
+// PREVIEW MODULE
 function previewModule(module) {
   openDialog(root => {
-    addDialogHeading(root, module.title || "Module preview", courseName(module.courseId));
+    addDialogHeading(
+      root,
+      module.title || "Module preview",
+      courseName(module.courseId)
+    );
+
     const description = document.createElement("p");
     description.textContent = module.description || "";
     root.appendChild(description);
 
     const embed = driveEmbedUrl(module.videoUrl || "");
+
     if (embed) {
       const frame = document.createElement("iframe");
       frame.src = embed;
       frame.title = module.title || "Module video preview";
-      frame.allow = "autoplay; encrypted-media; picture-in-picture";
+      frame.allow =
+        "autoplay; encrypted-media; picture-in-picture";
       frame.allowFullscreen = true;
       root.appendChild(frame);
+
     } else {
       const note = document.createElement("p");
       note.textContent = "No valid Drive video link is available.";
@@ -511,38 +842,69 @@ function previewModule(module) {
 
     const actions = document.createElement("div");
     actions.className = "dialog-actions";
-    actions.appendChild(makeButton("Close preview", "button button-dark", closeDialog));
+
+    actions.appendChild(
+      makeButton("Close preview", "button button-dark", closeDialog)
+    );
+
     root.appendChild(actions);
   });
 }
 
+// PUBLISH / UNPUBLISH MODULE
 async function toggleModulePublication(module) {
   const next = !module.published;
-  if (!window.confirm(`${next ? "Publish" : "Unpublish"} module "${module.title}"?`)) return;
+
+  if (
+    !window.confirm(
+      `${next ? "Publish" : "Unpublish"} module "${module.title}"?`
+    )
+  ) return;
 
   try {
     await updateDoc(doc(db, "modules", module.id), {
       published: next,
       updatedAt: serverTimestamp()
     });
-    status("managedModuleStatus", next ? "Module published." : "Module unpublished.");
+
+    status(
+      "managedModuleStatus",
+      next ? "Module published." : "Module unpublished."
+    );
+
     await loadManagedModules(module.courseId);
+
   } catch (error) {
-    status("managedModuleStatus", `Could not change module status: ${showError(error)}`);
+    status(
+      "managedModuleStatus",
+      `Could not change module status: ${showError(error)}`
+    );
   }
 }
 
+// DELETE MODULE
 async function deleteModule(module) {
-  if (!window.confirm(`Delete module "${module.title}"? This cannot be undone.`)) return;
+  if (
+    !window.confirm(
+      `Delete module "${module.title}"? This cannot be undone.`
+    )
+  ) return;
 
   try {
     await deleteDoc(doc(db, "modules", module.id));
+
     status("managedModuleStatus", "Module deleted.");
+
     await loadManagedModules(module.courseId);
+
   } catch (error) {
-    status("managedModuleStatus", `Could not delete module: ${showError(error)}`);
+    status(
+      "managedModuleStatus",
+      `Could not delete module: ${showError(error)}`
+    );
   }
 }
+
 // LOAD PARTICIPANTS
 async function loadParticipants() {
   participantList.replaceChildren();
@@ -566,8 +928,10 @@ async function loadParticipants() {
     item.className = "admin-item";
 
     const info = document.createElement("div");
+
     const name = document.createElement("strong");
-    name.textContent = participant.name || participant.email || uid;
+    name.textContent =
+      participant.name || participant.email || uid;
 
     const details = document.createElement("small");
     details.textContent = participant.email || uid;
@@ -576,13 +940,21 @@ async function loadParticipants() {
     let active = false;
 
     if (courseId) {
-      const enrollmentSnap = await getDoc(doc(db, "enrollments", `${uid}_${courseId}`));
-      if (enrollmentSnap.exists() && enrollmentSnap.data().status === "approved") {
+      const enrollmentSnap = await getDoc(
+        doc(db, "enrollments", `${uid}_${courseId}`)
+      );
+
+      if (
+        enrollmentSnap.exists() &&
+        enrollmentSnap.data().status === "approved"
+      ) {
         active = true;
-        courseDetails.textContent = `Assigned course: ${courseName(courseId)}`;
+        courseDetails.textContent =
+          `Assigned course: ${courseName(courseId)}`;
       } else {
         courseDetails.textContent = "No active course approval";
       }
+
     } else {
       courseDetails.textContent = "No course assigned";
     }
@@ -590,33 +962,55 @@ async function loadParticipants() {
     info.append(name, details, courseDetails);
 
     const actions = document.createElement("div");
+
     const badge = document.createElement("span");
     badge.className = "admin-badge";
     badge.textContent = active ? "Approved" : "No active access";
+
     actions.appendChild(badge);
 
     if (active) {
-      actions.appendChild(makeButton("Revoke access", "button button-dark", async event => {
-        const confirmed = window.confirm(
-          `Revoke course access for ${participant.name || participant.email || uid}?`
-        );
-        if (!confirmed) return;
+      actions.appendChild(
+        makeButton(
+          "Revoke access",
+          "button button-dark",
+          async () => {
+            const confirmed = window.confirm(
+              `Revoke course access for ${participant.name || participant.email || uid}?`
+            );
 
-        try {
-          await updateDoc(doc(db, "enrollments", `${uid}_${courseId}`), {
-            status: "revoked",
-            revokedAt: serverTimestamp()
-          });
-          await updateDoc(doc(db, "participants", uid), {
-            courseId: deleteField(),
-            updatedAt: serverTimestamp()
-          });
-          status("participantListStatus", "Participant access revoked successfully.");
-          await loadParticipants();
-        } catch (error) {
-          status("participantListStatus", `Could not revoke access: ${showError(error)}`);
-        }
-      }));
+            if (!confirmed) return;
+
+            try {
+              await updateDoc(
+                doc(db, "enrollments", `${uid}_${courseId}`),
+                {
+                  status: "revoked",
+                  revokedAt: serverTimestamp()
+                }
+              );
+
+              await updateDoc(doc(db, "participants", uid), {
+                courseId: deleteField(),
+                updatedAt: serverTimestamp()
+              });
+
+              status(
+                "participantListStatus",
+                "Participant access revoked successfully."
+              );
+
+              await loadParticipants();
+
+            } catch (error) {
+              status(
+                "participantListStatus",
+                `Could not revoke access: ${showError(error)}`
+              );
+            }
+          }
+        )
+      );
     }
 
     item.append(info, actions);
@@ -627,7 +1021,7 @@ async function loadParticipants() {
 // VERIFY ADMIN
 onAuthStateChanged(auth, async user => {
   if (!user) {
-    window.location.replace("login.html");
+    window.location.replace("login.html?admin=1");
     return;
   }
 
@@ -635,23 +1029,33 @@ onAuthStateChanged(auth, async user => {
     `${user.displayName || "Administrator"} · ${user.email || ""}`;
 
   try {
-    const adminRecord = await getDoc(doc(db, "admins", user.uid));
+    const adminRecord = await getDoc(
+      doc(db, "admins", user.uid)
+    );
 
-    if (!adminRecord.exists() || adminRecord.data().role !== "admin") {
+    if (
+      !adminRecord.exists() ||
+      adminRecord.data().role !== "admin"
+    ) {
       accessMessage.hidden = false;
+
       accessMessage.textContent =
         "This Google account is not registered as a TBARC Academy administrator. Please sign out and use the authorized account.";
+
       return;
     }
 
     adminTools.hidden = false;
+
     await loadCourses();
     await loadManagedModules("");
     await loadParticipants();
 
   } catch (error) {
     console.error(error);
+
     accessMessage.hidden = false;
+
     accessMessage.textContent =
       "Could not verify administrator access. Check Firestore rules and your internet connection.";
   }
@@ -660,28 +1064,75 @@ onAuthStateChanged(auth, async user => {
 // CREATE COURSE — NEW COURSES DEFAULT TO DRAFT
 byId("courseForm")?.addEventListener("submit", async event => {
   event.preventDefault();
+
   const button = event.submitter;
   button.disabled = true;
-  status("courseStatus", "Saving draft course…");
+
+  status("courseStatus", "Saving course…");
 
   try {
     const title = byId("courseTitle").value.trim();
-    const description = byId("courseDescription").value.trim();
-    const published = byId("coursePublished")?.value === "true";
+    const shortDescription =
+      byId("courseShortDescription").value.trim();
+    const description =
+      byId("courseDescription").value.trim();
+    const image = byId("courseImage").value.trim();
+    const duration = byId("courseDuration").value.trim();
+    const mode = byId("courseMode").value.trim();
+    const instructor = byId("courseInstructor").value.trim();
+    const fee = byId("courseFee").value.trim();
+
+    const objectives = byId("courseObjectives").value
+      .split("\n")
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    const syllabus = byId("courseSyllabus").value
+      .split("\n")
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    const published =
+      byId("coursePublished").value === "true";
+
+    if (!title) {
+      throw new Error("Please enter a course title.");
+    }
 
     await addDoc(collection(db, "courses"), {
       title,
+      shortDescription,
       description,
+      image,
+      duration,
+      mode,
+      instructor,
+      fee,
+      objectives,
+      syllabus,
       published,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
 
     byId("courseForm").reset();
-    if (byId("coursePublished")) byId("coursePublished").value = "false";
-    status("courseStatus", published ? "Course created and published." : "Draft course created successfully.");
+    byId("coursePublished").value = "false";
+
+    status(
+      "courseStatus",
+      published
+        ? "Course created and published."
+        : "Draft course created successfully."
+    );
+
     await loadCourses();
+
   } catch (error) {
-    status("courseStatus", `Could not create course: ${showError(error)}`);
+    status(
+      "courseStatus",
+      `Could not create course: ${showError(error)}`
+    );
+
   } finally {
     button.disabled = false;
   }
@@ -690,8 +1141,10 @@ byId("courseForm")?.addEventListener("submit", async event => {
 // CREATE MODULE — NEW MODULES DEFAULT TO DRAFT
 byId("moduleForm")?.addEventListener("submit", async event => {
   event.preventDefault();
+
   const button = event.submitter;
   button.disabled = true;
+
   status("moduleStatus", "Saving module…");
 
   try {
@@ -700,12 +1153,19 @@ byId("moduleForm")?.addEventListener("submit", async event => {
     const description = byId("moduleDescription").value.trim();
     const videoUrl = byId("moduleVideoUrl").value.trim();
     const order = Number(byId("moduleOrder").value);
-    const published = byId("modulePublished").value === "true";
+    const published =
+      byId("modulePublished").value === "true";
 
-    if (!courseId) throw new Error("Please select a course.");
-    if (!Number.isInteger(order) || order < 1) throw new Error("Enter a valid module order.");
+    if (!courseId) {
+      throw new Error("Please select a course.");
+    }
+
+    if (!Number.isInteger(order) || order < 1) {
+      throw new Error("Enter a valid module order.");
+    }
 
     const parsed = new URL(videoUrl);
+
     if (!["drive.google.com", "docs.google.com"].includes(parsed.hostname)) {
       throw new Error("Please enter a Google Drive video URL.");
     }
@@ -723,12 +1183,20 @@ byId("moduleForm")?.addEventListener("submit", async event => {
     byId("moduleForm").reset();
     byId("moduleOrder").value = 1;
     byId("modulePublished").value = "false";
+
     status("moduleStatus", "Module saved successfully.");
+
     selectedModuleCourse = courseId;
     byId("manageModuleCourse").value = courseId;
+
     await loadManagedModules(courseId);
+
   } catch (error) {
-    status("moduleStatus", `Could not save module: ${showError(error)}`);
+    status(
+      "moduleStatus",
+      `Could not save module: ${showError(error)}`
+    );
+
   } finally {
     button.disabled = false;
   }
@@ -737,13 +1205,16 @@ byId("moduleForm")?.addEventListener("submit", async event => {
 // APPROVE PARTICIPANT
 byId("enrollmentForm")?.addEventListener("submit", async event => {
   event.preventDefault();
+
   const button = event.submitter;
   button.disabled = true;
+
   status("enrollmentStatus", "Granting permanent access…");
 
   try {
     const uid = byId("participantUid").value.trim();
-    const email = byId("participantEmail").value.trim().toLowerCase();
+    const email =
+      byId("participantEmail").value.trim().toLowerCase();
     const name = byId("participantName").value.trim();
     const courseId = byId("enrollmentCourse").value;
 
@@ -752,7 +1223,10 @@ byId("enrollmentForm")?.addEventListener("submit", async event => {
     }
 
     const course = courses.find(c => c.id === courseId);
-    if (!course) throw new Error("Selected course could not be found.");
+
+    if (!course) {
+      throw new Error("Selected course could not be found.");
+    }
 
     const participantRef = doc(db, "participants", uid);
     const participantSnap = await getDoc(participantRef);
@@ -762,22 +1236,50 @@ byId("enrollmentForm")?.addEventListener("submit", async event => {
       participantSnap.data().courseId &&
       participantSnap.data().courseId !== courseId
     ) {
-      throw new Error("This participant already has another assigned course. Revoke the existing access before assigning a different course.");
+      throw new Error(
+        "This participant already has another assigned course. Revoke the existing access before assigning a different course."
+      );
     }
 
-    await setDoc(participantRef, {
-      uid, email, name, courseId, updatedAt: serverTimestamp()
-    }, { merge: true });
+    await setDoc(
+      participantRef,
+      {
+        uid,
+        email,
+        name,
+        courseId,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
 
-    await setDoc(doc(db, "enrollments", `${uid}_${courseId}`), {
-      uid, email, courseId, status: "approved", createdAt: serverTimestamp()
-    }, { merge: true });
+    await setDoc(
+      doc(db, "enrollments", `${uid}_${courseId}`),
+      {
+        uid,
+        email,
+        courseId,
+        status: "approved",
+        createdAt: serverTimestamp()
+      },
+      { merge: true }
+    );
 
     byId("enrollmentForm").reset();
-    status("enrollmentStatus", `Permanent access approved for ${name} – ${course.title}.`);
+
+    status(
+      "enrollmentStatus",
+      `Permanent access approved for ${name} – ${course.title}.`
+    );
+
     await loadParticipants();
+
   } catch (error) {
-    status("enrollmentStatus", `Could not approve participant: ${showError(error)}`);
+    status(
+      "enrollmentStatus",
+      `Could not approve participant: ${showError(error)}`
+    );
+
   } finally {
     button.disabled = false;
   }
